@@ -7,10 +7,25 @@ export function getRepoPath(): string {
 }
 
 export function getBranch(): string {
-  return process.env['BRANCH'] ?? 'main';
+  const branch = process.env['BRANCH'];
+  if (!branch) {
+    throw new Error('BRANCH environment variable is not set');
+  }
+  return branch;
 }
 
 export function getCheckIntervalHours(): number {
   const hours = process.env['CHECK_INTERVAL_HOURS'];
-  return hours ? parseInt(hours, 10) : 1;
+  if (!hours) {
+    throw new Error('CHECK_INTERVAL_HOURS environment variable is not set');
+  }
+  return parseInt(hours, 10);
+}
+
+export function getReportDir(): string {
+  const reportDir = process.env['REPORT_DIR'];
+  if (!reportDir) {
+    throw new Error('REPORT_DIR environment variable is not set');
+  }
+  return reportDir;
 }
