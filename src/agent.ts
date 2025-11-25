@@ -1,6 +1,7 @@
 import {Session} from './ai/session.js';
 import type {ToolResult} from './ai/session.js';
 import {ToolRegistry} from './ai/tool-registry.js';
+import {logger} from './logger/logger.js';
 import {SYSTEM_PROMPT} from './prompts/system-prompt.js';
 import {createUserPrompt} from './prompts/user-prompt.js';
 
@@ -45,17 +46,17 @@ export async function runAgent(): Promise<void> {
     tools: registry.getToolDefinitions(),
   });
 
-  console.log('Starting RepoSentinel agent...\n');
+  logger.info('Starting RepoSentinel agent...');
 
   let response = await session.chat(createUserPrompt());
 
-  console.log(JSON.stringify(response, null, 2));
+  logger.debug('API Response', response);
 
   // Helper to extract and print content from all choices
   const printContent = () => {
     for (const choice of response.choices) {
       if (choice.message.content) {
-        console.log(`\nAssistant: ${choice.message.content}\n`);
+        logger.assistant(choice.message.content);
       }
     }
   };
@@ -77,24 +78,22 @@ export async function runAgent(): Promise<void> {
     // Execute all tool calls in parallel
     const results: ToolResult[] = await Promise.all(
       toolCalls.map(async (toolCall) => {
+        const toolId = toolCall.id;
         const toolName = toolCall.function.name;
         const toolArgs = toolCall.function.arguments;
 
-        console.log(`\n--- Tool Call: ${toolName} ---`);
-        console.log(`Input: ${toolArgs}`);
+        logger.toolStart(toolName, toolId, toolArgs);
 
         try {
           const output = await registry.execute(toolName, toolArgs);
-          console.log(`Output: ${output}`);
-          console.log(`--- End ${toolName} ---\n`);
-          return {tool_call_id: toolCall.id, content: output};
+          logger.toolEnd(toolName, toolId, output);
+          return {tool_call_id: toolId, content: output};
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          console.error(`Error: ${errorMessage}`);
-          console.log(`--- End ${toolName} ---\n`);
+          logger.toolError(toolName, toolId, errorMessage);
           return {
-            tool_call_id: toolCall.id,
+            tool_call_id: toolId,
             content: JSON.stringify({error: errorMessage}),
           };
         }
