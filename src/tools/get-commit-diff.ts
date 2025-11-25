@@ -11,8 +11,9 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'get_commit_diff',
-    description:
-      'Get the diff content for a specific commit. Optionally limit to a specific file.',
+    description: `Get the diff content for a specific commit. Optionally limit to a specific file.
+
+Returns: Unified diff format string showing added (+) and removed (-) lines, or "(no diff content)" if empty.`,
     parameters: {
       type: 'object',
       properties: {

@@ -11,8 +11,9 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'get_file_content',
-    description:
-      'Read the content of a file at a specific commit. Use "HEAD" for the current version.',
+    description: `Read the content of a file at a specific commit. Use "HEAD" for the current version.
+
+Returns: Raw file content as string.`,
     parameters: {
       type: 'object',
       properties: {

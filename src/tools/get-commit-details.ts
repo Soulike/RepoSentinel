@@ -19,20 +19,36 @@ export interface CommitDetails {
 
 export interface GetCommitDetailsParams {
   commitHash: string;
+  path?: string;
 }
 
 export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'get_commit_details',
-    description:
-      'Get detailed information about a specific commit including the list of changed files with their status and line changes.',
+    description: `Get detailed information about a specific commit including the list of changed files with their status and line changes.
+
+Returns: JSON object with:
+- hash: Full commit hash
+- author: Commit author name
+- date: ISO 8601 timestamp
+- message: Full commit message
+- files: Array of changed files, each with:
+  - path: File path
+  - status: One of "added", "modified", "deleted", "renamed"
+  - additions: Number of lines added
+  - deletions: Number of lines removed`,
     parameters: {
       type: 'object',
       properties: {
         commitHash: {
           type: 'string',
           description: 'The commit hash to inspect (full or short hash).',
+        },
+        path: {
+          type: 'string',
+          description:
+            'Optional path to filter. Only files under this path will be included in the result.',
         },
       },
       required: ['commitHash'],
@@ -48,7 +64,7 @@ const STATUS_MAP: Record<string, ChangedFile['status']> = {
 };
 
 export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
-  const {commitHash} = args;
+  const {commitHash, path} = args;
 
   // Get commit metadata
   const format = '%H|%an|%aI|%B';
@@ -63,20 +79,18 @@ export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
   const message = messageParts.join('|').trim();
 
   // Get file changes with stats
-  const statsOutput = await execGit([
-    'show',
-    commitHash,
-    '--numstat',
-    '--pretty=format:',
-  ]);
+  const statsArgs = ['show', commitHash, '--numstat', '--pretty=format:'];
+  if (path) {
+    statsArgs.push('--', path);
+  }
+  const statsOutput = await execGit(statsArgs);
 
   // Get file statuses
-  const statusOutput = await execGit([
-    'show',
-    commitHash,
-    '--name-status',
-    '--pretty=format:',
-  ]);
+  const statusArgs = ['show', commitHash, '--name-status', '--pretty=format:'];
+  if (path) {
+    statusArgs.push('--', path);
+  }
+  const statusOutput = await execGit(statusArgs);
 
   const statusLines = statusOutput
     .split('\n')

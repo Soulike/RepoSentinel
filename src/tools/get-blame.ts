@@ -20,8 +20,14 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'get_blame',
-    description:
-      'Show who last modified each line of a file. Useful for understanding code ownership and history.',
+    description: `Show who last modified each line of a file. Useful for understanding code ownership and history.
+
+Returns: JSON array of line objects with:
+- lineNumber: 1-based line number
+- hash: Short commit hash (8 chars)
+- author: Author who last modified this line
+- date: ISO 8601 timestamp of modification
+- content: The actual line content`,
     parameters: {
       type: 'object',
       properties: {

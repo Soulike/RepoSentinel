@@ -11,8 +11,12 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'fetch_remote',
-    description:
-      'Fetch updates from the remote repository to get the latest commits. Should be called before analyzing commits to ensure data is up to date.',
+    description: `Fetch updates from the remote repository to get the latest commits. Should be called before analyzing commits to ensure data is up to date.
+
+Returns: JSON object with:
+- success: Boolean indicating fetch succeeded
+- remote: Remote name that was fetched
+- branch: Branch fetched, or "all" if all branches`,
     parameters: {
       type: 'object',
       properties: {

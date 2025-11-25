@@ -19,8 +19,14 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'get_file_history',
-    description:
-      'Get the commit history for a specific file. Useful for understanding how a file has evolved over time.',
+    description: `Get the commit history for a specific file. Useful for understanding how a file has evolved over time.
+
+Returns: JSON array of commit objects with:
+- hash: Full commit hash
+- shortHash: Abbreviated 7-char hash
+- author: Commit author name
+- date: ISO 8601 timestamp
+- message: Commit message subject line`,
     parameters: {
       type: 'object',
       properties: {

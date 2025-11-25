@@ -5,14 +5,16 @@ import {execGit} from '../helpers/git-helpers.js';
 export interface ListChangedFilesParams {
   branch: string;
   hours: number;
+  path?: string;
 }
 
 export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'list_changed_files',
-    description:
-      'List all unique files that were changed in commits within the specified time window.',
+    description: `List all unique files that were changed in commits within the specified time window.
+
+Returns: JSON array of file path strings.`,
     parameters: {
       type: 'object',
       properties: {
@@ -24,6 +26,11 @@ export const definition: ChatCompletionFunctionTool = {
           type: 'number',
           description: 'Number of hours to look back.',
         },
+        path: {
+          type: 'string',
+          description:
+            'Optional path to filter. Only files under this path will be returned.',
+        },
       },
       required: ['branch', 'hours'],
     },
@@ -31,16 +38,22 @@ export const definition: ChatCompletionFunctionTool = {
 };
 
 export const handler: ToolFunction<ListChangedFilesParams> = async (args) => {
-  const {branch, hours} = args;
+  const {branch, hours, path} = args;
   const since = `${hours} hours ago`;
 
-  const output = await execGit([
+  const gitArgs = [
     'log',
     branch,
     `--since="${since}"`,
     '--name-only',
     '--pretty=format:',
-  ]);
+  ];
+
+  if (path) {
+    gitArgs.push('--', path);
+  }
+
+  const output = await execGit(gitArgs);
 
   if (!output) {
     return JSON.stringify([]);

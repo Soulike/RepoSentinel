@@ -5,6 +5,7 @@ import {
   getBranch,
   getCheckIntervalHours,
   getReportDir,
+  getSubPath,
 } from '../helpers/env-helpers.js';
 
 export interface Config {
@@ -12,14 +13,21 @@ export interface Config {
   branch: string;
   checkIntervalHours: number;
   reportDir: string;
+  subPath: string;
 }
 
 export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'get_config',
-    description:
-      'Get the current RepoSentinel configuration including repo path, branch, check interval, and report directory.',
+    description: `Get the current RepoSentinel configuration.
+
+Returns: JSON object with:
+- repoPath: Absolute path to the repository
+- branch: Branch name to monitor
+- checkIntervalHours: Number of hours to look back
+- reportDir: Directory to save reports
+- subPath: Sub-path within repo to scope analysis`,
     parameters: {
       type: 'object',
       properties: {},
@@ -33,6 +41,7 @@ export const handler: ToolFunction<Record<string, never>> = async () => {
     branch: getBranch(),
     checkIntervalHours: getCheckIntervalHours(),
     reportDir: getReportDir(),
+    subPath: getSubPath(),
   };
 
   return JSON.stringify(config);

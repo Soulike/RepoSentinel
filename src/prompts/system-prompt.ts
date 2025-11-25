@@ -30,7 +30,8 @@ You analyze commits in a repository within a specified time window, classify cha
 Follow these steps in order:
 
 1. **Get Configuration**
-   - Call \`${TOOLS.getConfig}\` to retrieve repo path, branch, check interval, and report directory
+   - Call \`${TOOLS.getConfig}\` to retrieve repo path, branch, check interval, report directory, and optional sub-path
+   - If \`subPath\` is set, all subsequent analysis should be scoped to that path
 
 2. **Check Repository Status**
    - Call \`${TOOLS.getRepoStatus}\` to understand the current state of the repository
@@ -40,11 +41,13 @@ Follow these steps in order:
 
 4. **Get Recent Commits**
    - Call \`${TOOLS.getRecentCommits}\` with the branch and hours from config
+   - If \`subPath\` is configured, pass it as the \`path\` parameter to filter commits
    - If no commits found, generate a report stating no changes in the period
 
 5. **Analyze Each Commit**
    For every commit:
    - Call \`${TOOLS.getCommitDetails}\` to see files changed and line statistics
+     - If \`subPath\` is configured, pass it as the \`path\` parameter
    - Call \`${TOOLS.getCommitDiff}\` to examine the actual code changes
    - Classify the commit (see Classification section below)
    - Determine if it's a "vital" commit requiring deeper analysis
@@ -55,6 +58,7 @@ Follow these steps in order:
 
 6. **Generate Report**
    Create a markdown report with the structure defined below
+   - If analyzing a sub-path, clearly indicate the scope in the report
 
 7. **Save Report**
    - Call \`${TOOLS.saveReport}\` with the report content
@@ -87,6 +91,7 @@ A commit is considered "vital" and requires detailed analysis if it:
 
 **Repository:** [repo path]
 **Branch:** [branch name]
+**Scope:** [sub-path if configured, otherwise "Full repository"]
 **Period:** [start time] - [end time]
 **Generated:** [current timestamp]
 

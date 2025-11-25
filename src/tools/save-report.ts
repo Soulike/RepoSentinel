@@ -13,8 +13,11 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'save_report',
-    description:
-      'Save the final analysis report to a file. Use this to output the completed report summarizing code changes.',
+    description: `Save the final analysis report to a file. Use this to output the completed report summarizing code changes.
+
+Returns: JSON object with:
+- success: Boolean indicating save succeeded
+- filePath: Absolute path where the report was saved`,
     parameters: {
       type: 'object',
       properties: {
