@@ -51,55 +51,60 @@ export async function runAgent(): Promise<void> {
 
   console.log(JSON.stringify(response, null, 2));
 
+  // Helper to extract and print content from all choices
+  const printContent = () => {
+    for (const choice of response.choices) {
+      if (choice.message.content) {
+        console.log(`\nAssistant: ${choice.message.content}\n`);
+      }
+    }
+  };
+
+  // Helper to collect all tool calls from all choices
+  const collectToolCalls = () => {
+    return response.choices.flatMap(
+      (choice) =>
+        choice.message.tool_calls?.filter((tc) => tc.type === 'function') ?? [],
+    );
+  };
+
   // Output initial response content if any
-  const initialContent = response.choices[0]?.message.content;
-  if (initialContent) {
-    console.log(`Assistant: ${initialContent}\n`);
-  }
+  printContent();
 
   while (Session.requiresToolCall(response)) {
-    const toolCalls = response.choices[0]?.message.tool_calls ?? [];
-    const results: ToolResult[] = [];
+    const toolCalls = collectToolCalls();
 
-    for (const toolCall of toolCalls) {
-      if (toolCall.type !== 'function') {
-        continue;
-      }
+    // Execute all tool calls in parallel
+    const results: ToolResult[] = await Promise.all(
+      toolCalls.map(async (toolCall) => {
+        const toolName = toolCall.function.name;
+        const toolArgs = toolCall.function.arguments;
 
-      const toolName = toolCall.function.name;
-      const toolArgs = toolCall.function.arguments;
+        console.log(`\n--- Tool Call: ${toolName} ---`);
+        console.log(`Input: ${toolArgs}`);
 
-      console.log(`\n--- Tool Call: ${toolName} ---`);
-      console.log(`Input: ${toolArgs}`);
-
-      try {
-        const output = await registry.execute(toolName, toolArgs);
-        console.log(`Output: ${output}`);
-        results.push({tool_call_id: toolCall.id, content: output});
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        console.error(`Error: ${errorMessage}`);
-        results.push({
-          tool_call_id: toolCall.id,
-          content: JSON.stringify({error: errorMessage}),
-        });
-      }
-      console.log(`--- End ${toolName} ---\n`);
-    }
+        try {
+          const output = await registry.execute(toolName, toolArgs);
+          console.log(`Output: ${output}`);
+          console.log(`--- End ${toolName} ---\n`);
+          return {tool_call_id: toolCall.id, content: output};
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          console.error(`Error: ${errorMessage}`);
+          console.log(`--- End ${toolName} ---\n`);
+          return {
+            tool_call_id: toolCall.id,
+            content: JSON.stringify({error: errorMessage}),
+          };
+        }
+      }),
+    );
 
     response = await session.submitToolResults(results);
-
-    // Output response content after each tool result submission
-    const content = response.choices[0]?.message.content;
-    if (content) {
-      console.log(`\nAssistant: ${content}\n`);
-    }
+    printContent();
   }
 
-  const finalMessage = response.choices[0]?.message.content;
-  if (finalMessage) {
-    console.log('\nAgent completed:\n');
-    console.log(finalMessage);
-  }
+  // Print any final content
+  printContent();
 }

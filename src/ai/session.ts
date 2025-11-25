@@ -112,7 +112,10 @@ export class Session {
   static requiresToolCall(
     response: OpenAI.Chat.Completions.ChatCompletion,
   ): boolean {
-    return response.choices[0]?.finish_reason === 'tool_calls';
+    // Check all choices - some APIs return tool calls in separate choices
+    return response.choices.some(
+      (choice) => choice.finish_reason === 'tool_calls',
+    );
   }
 
   addUserMessage(content: string): void {
@@ -134,12 +137,40 @@ export class Session {
       ...(this.tools.length > 0 && {tools: this.tools}),
     });
 
-    const message = response.choices[0]?.message;
-    if (message) {
-      this.messages.push(message);
-    }
+    // Merge content and tool_calls from all choices into a single assistant message
+    // Some APIs (like Claude) return separate choices for content and tool calls
+    this.addAssistantMessageFromResponse(response);
 
     return response;
+  }
+
+  /**
+   * Merges all choices from a response into a single assistant message.
+   * Handles APIs that return content and tool_calls in separate choices.
+   */
+  private addAssistantMessageFromResponse(
+    response: OpenAI.Chat.Completions.ChatCompletion,
+  ): void {
+    const allContent: string[] = [];
+    const allToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] =
+      [];
+
+    for (const choice of response.choices) {
+      if (choice.message.content) {
+        allContent.push(choice.message.content);
+      }
+      if (choice.message.tool_calls) {
+        allToolCalls.push(...choice.message.tool_calls);
+      }
+    }
+
+    const mergedMessage: ChatCompletionMessageParam = {
+      role: 'assistant',
+      content: allContent.join('\n') || null,
+      ...(allToolCalls.length > 0 && {tool_calls: allToolCalls}),
+    };
+
+    this.messages.push(mergedMessage);
   }
 
   async submitToolResults(
@@ -160,10 +191,7 @@ export class Session {
       ...(this.tools.length > 0 && {tools: this.tools}),
     });
 
-    const message = response.choices[0]?.message;
-    if (message) {
-      this.messages.push(message);
-    }
+    this.addAssistantMessageFromResponse(response);
 
     return response;
   }
