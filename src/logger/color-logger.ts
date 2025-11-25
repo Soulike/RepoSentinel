@@ -6,12 +6,20 @@ class ColorLogger {
     this.color = color;
   }
 
+  private static timestamp(): string {
+    return new Date().toISOString();
+  }
+
   log(msg: string): void {
-    console.log(`${this.color}${msg}${ColorLogger.reset}`);
+    console.log(
+      `${this.color}[${ColorLogger.timestamp()}] ${msg}${ColorLogger.reset}`,
+    );
   }
 
   error(msg: string): void {
-    console.error(`${this.color}${msg}${ColorLogger.reset}`);
+    console.error(
+      `${this.color}[${ColorLogger.timestamp()}] ${msg}${ColorLogger.reset}`,
+    );
   }
 
   static readonly red = new ColorLogger('\x1b[31m');
