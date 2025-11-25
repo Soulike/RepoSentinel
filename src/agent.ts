@@ -49,6 +49,8 @@ export async function runAgent(): Promise<void> {
 
   let response = await session.chat(createUserPrompt());
 
+  console.log(JSON.stringify(response, null, 2));
+
   // Output initial response content if any
   const initialContent = response.choices[0]?.message.content;
   if (initialContent) {

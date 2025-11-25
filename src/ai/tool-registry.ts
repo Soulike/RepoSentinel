@@ -58,7 +58,8 @@ export class ToolRegistry {
       throw new Error(`Tool not found: ${name}`);
     }
     const args: unknown = JSON.parse(argsJson);
-    return fn(args);
+    const result = await fn(args);
+    return result.trim();
   }
 
   getToolDefinitions(): ChatCompletionTool[] {
