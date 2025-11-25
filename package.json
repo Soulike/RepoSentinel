@@ -1,11 +1,11 @@
 {
-  "name": "RepoSentinel",
+  "name": "repo-sentinel",
   "version": "1.0.0",
   "description": "",
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist/ && tsc",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -33,7 +33,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0-only",
   "packageManager": "pnpm@10.23.0",
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
