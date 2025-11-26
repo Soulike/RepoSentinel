@@ -48,5 +48,30 @@ export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
     ref: args.commitHash,
   });
 
-  return JSON.stringify(data);
+  // Map GitHub status to match git tool format
+  const statusMap: Record<string, string> = {
+    added: 'added',
+    removed: 'deleted',
+    modified: 'modified',
+    renamed: 'renamed',
+    copied: 'added',
+    changed: 'modified',
+    unchanged: 'modified',
+  };
+
+  // Extract only essential fields to match git tool output
+  const result = {
+    hash: data.sha,
+    author: data.commit.author?.name ?? '',
+    date: data.commit.author?.date ?? '',
+    message: data.commit.message,
+    files: (data.files ?? []).map((file) => ({
+      path: file.filename,
+      status: statusMap[file.status ?? 'modified'] ?? 'modified',
+      additions: file.additions,
+      deletions: file.deletions,
+    })),
+  };
+
+  return JSON.stringify(result);
 };

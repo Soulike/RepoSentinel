@@ -60,5 +60,14 @@ export const handler: ToolFunction<GetFileHistoryParams> = async (args) => {
     ...(args.ref && {sha: args.ref}),
   });
 
-  return JSON.stringify(data);
+  // Extract only essential fields to match git tool output
+  const commits = data.map((commit) => ({
+    hash: commit.sha,
+    shortHash: commit.sha.slice(0, 7),
+    author: commit.commit.author?.name ?? '',
+    date: commit.commit.author?.date ?? '',
+    message: commit.commit.message.split('\n')[0] ?? '',
+  }));
+
+  return JSON.stringify(commits);
 };

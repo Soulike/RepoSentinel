@@ -41,5 +41,15 @@ export const handler: ToolFunction<GetRepoStatusParams> = async (args) => {
     repo: args.repo,
   });
 
-  return JSON.stringify(data);
+  // Extract only essential fields to match git tool output simplicity
+  return JSON.stringify({
+    name: data.name,
+    fullName: data.full_name,
+    defaultBranch: data.default_branch,
+    visibility: data.visibility,
+    description: data.description,
+    language: data.language,
+    updatedAt: data.updated_at,
+    pushedAt: data.pushed_at,
+  });
 };
