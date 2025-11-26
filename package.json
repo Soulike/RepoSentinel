@@ -1,15 +1,14 @@
 {
-  "name": "repo-sentinel",
+  "name": "repo-sentinel-monorepo",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
   "type": "module",
-  "main": "./dist/index.js",
   "scripts": {
-    "build": "rm -rf dist/ && tsc",
-    "start": "pnpm build && node dist/index.js",
+    "build": "pnpm -r run build",
+    "build:libs": "pnpm -r --filter './libraries/**' run build",
+    "build:tools": "pnpm -r --filter './tools/**' run build",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky"
   },
   "prettier": {
@@ -48,9 +47,5 @@
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.0"
-  },
-  "dependencies": {
-    "dotenv": "^17.2.3",
-    "openai": "^6.9.1"
   }
 }

@@ -7,13 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      dotenv:
-        specifier: ^17.2.3
-        version: 17.2.3
-      openai:
-        specifier: ^6.9.1
-        version: 6.9.1
     devDependencies:
       '@commitlint/cli':
         specifier: ^20.1.0
@@ -48,6 +41,66 @@ importers:
       typescript-eslint:
         specifier: ^8.48.0
         version: 8.48.0(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+
+  agents/repo-sentinel:
+    dependencies:
+      '@ai/openai-session':
+        specifier: workspace:*
+        version: link:../../libraries/openai-session
+      '@helpers/logger':
+        specifier: workspace:*
+        version: link:../../libraries/logger
+      '@openai-tools/git':
+        specifier: workspace:*
+        version: link:../../tools/git
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
+      openai:
+        specifier: ^6.9.1
+        version: 6.9.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  libraries/logger:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  libraries/openai-session:
+    dependencies:
+      openai:
+        specifier: ^6.9.1
+        version: 6.9.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  tools/git:
+    dependencies:
+      '@ai/openai-session':
+        specifier: workspace:*
+        version: link:../../libraries/openai-session
+      openai:
+        specifier: ^6.0.0
+        version: 6.9.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 
