@@ -7,7 +7,6 @@
     "build": "pnpm -r run build",
     "build:libs": "pnpm -r --filter './libraries/**' run build",
     "build:tools": "pnpm -r --filter './tools/**' run build",
-    "lint": "eslint .",
     "format": "prettier --write .",
     "prepare": "husky"
   },
@@ -22,15 +21,6 @@
       "@commitlint/config-conventional"
     ]
   },
-  "lint-staged": {
-    "*.{js,ts}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
-  },
   "keywords": [],
   "author": "",
   "license": "GPL-3.0-only",
@@ -38,14 +28,12 @@
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
-    "@eslint/js": "^9.39.1",
+    "@configs/eslint": "workspace:*",
     "@types/node": "^24.10.1",
     "eslint": "^9.39.1",
-    "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.48.0"
+    "typescript": "^5.9.3"
   }
 }

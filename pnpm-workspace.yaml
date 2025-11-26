@@ -1,4 +1,5 @@
 packages:
   - 'agents/*'
-  - 'tools/*'
+  - 'configs/*'
   - 'libraries/*'
+  - 'tools/*'

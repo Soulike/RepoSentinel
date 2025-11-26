@@ -21,8 +21,10 @@
     "@ai/openai-session": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "@types/node": "^24.10.1"
+    "@configs/eslint": "workspace:*",
+    "@configs/typescript": "workspace:*",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
     "openai": "^6.0.0"

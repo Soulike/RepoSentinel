@@ -1,9 +1,8 @@
 {
-  "extends": "../../tsconfig.build.json",
+  "extends": "@configs/typescript/library",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist"
   },
-  "include": ["src/**/*"],
-  "references": [{"path": "../../libraries/openai-session"}]
+  "include": ["src/**/*"]
 }
