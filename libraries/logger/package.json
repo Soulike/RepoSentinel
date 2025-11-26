@@ -18,6 +18,8 @@
     "build": "tsc"
   },
   "devDependencies": {
+    "@configs/eslint": "workspace:*",
+    "@configs/typescript": "workspace:*",
     "typescript": "^5.9.3"
   }
 }
