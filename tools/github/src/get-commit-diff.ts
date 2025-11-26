@@ -1,6 +1,7 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
 import {createOctokit, type GitHubBaseParams} from './github-helpers.js';
+import assert from 'node:assert';
 
 export interface GetCommitDiffParams extends GitHubBaseParams {
   commitHash: string;
@@ -51,8 +52,10 @@ export const handler: ToolFunction<GetCommitDiffParams> = async (args) => {
     },
   });
 
-  // When requesting diff format, data is returned as a string
-  const diffContent = diff as unknown as string;
+  assert(
+    typeof diff === 'string',
+    'GitHub API is responding with unexpected diff result.',
+  );
 
-  return diffContent || '(no diff content)';
+  return diff || '(no diff content)';
 };
