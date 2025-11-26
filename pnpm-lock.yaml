@@ -83,6 +83,18 @@ importers:
 
   configs/typescript: {}
 
+  libraries/binary-utils:
+    devDependencies:
+      '@configs/eslint':
+        specifier: workspace:*
+        version: link:../../configs/eslint
+      '@configs/typescript':
+        specifier: workspace:*
+        version: link:../../configs/typescript
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   libraries/logger:
     devDependencies:
       '@configs/eslint':
@@ -119,6 +131,9 @@ importers:
       '@ai/openai-session':
         specifier: workspace:*
         version: link:../../libraries/openai-session
+      '@helpers/binary-utils':
+        specifier: workspace:*
+        version: link:../../libraries/binary-utils
       openai:
         specifier: ^6.0.0
         version: 6.9.1
@@ -141,6 +156,9 @@ importers:
       '@ai/openai-session':
         specifier: workspace:*
         version: link:../../libraries/openai-session
+      '@helpers/binary-utils':
+        specifier: workspace:*
+        version: link:../../libraries/binary-utils
       '@octokit/rest':
         specifier: ^21.1.1
         version: 21.1.1

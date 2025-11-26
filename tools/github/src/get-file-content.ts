@@ -1,5 +1,6 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
+import {isBinaryBase64} from '@helpers/binary-utils';
 import {createOctokit, type GitHubBaseParams} from './github-helpers.js';
 
 export interface GetFileContentParams extends GitHubBaseParams {
@@ -11,9 +12,9 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'github_get_file_content',
-    description: `Get the content of a file at a specific commit or branch.
+    description: `Get the content of a text file at a specific commit or branch.
 
-Returns: The raw file content as a string.`,
+Returns: The file content as a string. Returns an error for binary files or directories.`,
     parameters: {
       type: 'object',
       properties: {
@@ -55,7 +56,6 @@ export const handler: ToolFunction<GetFileContentParams> = async (args) => {
     ...(args.ref && {ref: args.ref}),
   });
 
-  // getContent can return file or directory; we expect a file
   if (Array.isArray(data)) {
     return JSON.stringify({
       error: 'Path is a directory, not a file',
@@ -67,7 +67,14 @@ export const handler: ToolFunction<GetFileContentParams> = async (args) => {
     return JSON.stringify({error: 'Path is not a file', type: data.type});
   }
 
-  // Content is base64 encoded
-  const content = Buffer.from(data.content, 'base64').toString('utf-8');
-  return content;
+  if (isBinaryBase64(data.content)) {
+    return JSON.stringify({
+      error: 'File is binary',
+      path: data.path,
+      size: data.size,
+      sha: data.sha,
+    });
+  }
+
+  return Buffer.from(data.content, 'base64').toString('utf-8');
 };

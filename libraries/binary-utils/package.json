@@ -1,5 +1,5 @@
 {
-  "name": "@openai-tools/github",
+  "name": "@helpers/binary-utils",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -17,18 +17,9 @@
   "scripts": {
     "build": "tsc"
   },
-  "dependencies": {
-    "@ai/openai-session": "workspace:*",
-    "@helpers/binary-utils": "workspace:*",
-    "@octokit/rest": "^21.1.1"
-  },
   "devDependencies": {
     "@configs/eslint": "workspace:*",
     "@configs/typescript": "workspace:*",
-    "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
-  },
-  "peerDependencies": {
-    "openai": "^6.0.0"
   }
 }

@@ -1,5 +1,6 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
+import {isBinary} from '@helpers/binary-utils';
 import {execGit} from './git-helpers.js';
 
 export interface GetFileContentParams {
@@ -12,9 +13,9 @@ export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
     name: 'get_file_content',
-    description: `Read the content of a file at a specific commit. Use "HEAD" for the current version.
+    description: `Read the content of a text file at a specific commit. Use "HEAD" for the current version.
 
-Returns: Raw file content as string.`,
+Returns: File content as string. Returns an error for binary files.`,
     parameters: {
       type: 'object',
       properties: {
@@ -44,6 +45,14 @@ export const handler: ToolFunction<GetFileContentParams> = async (args) => {
     'show',
     `${commitHash}:${filePath}`,
   ]);
+
+  if (isBinary(content)) {
+    return JSON.stringify({
+      error: 'File is binary',
+      path: filePath,
+      commitHash,
+    });
+  }
 
   return content;
 };

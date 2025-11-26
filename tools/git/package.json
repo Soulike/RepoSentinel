@@ -18,7 +18,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@ai/openai-session": "workspace:*"
+    "@ai/openai-session": "workspace:*",
+    "@helpers/binary-utils": "workspace:*"
   },
   "devDependencies": {
     "@configs/eslint": "workspace:*",
