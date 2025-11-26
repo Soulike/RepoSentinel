@@ -4,7 +4,6 @@ import {createOctokit, type GitHubBaseParams} from './github-helpers.js';
 
 export interface GetCommitDiffParams extends GitHubBaseParams {
   commitHash: string;
-  filePath?: string;
 }
 
 export const definition: ChatCompletionFunctionTool = {
@@ -13,7 +12,7 @@ export const definition: ChatCompletionFunctionTool = {
     name: 'github_get_commit_diff',
     description: `Get the diff/patch for a specific commit.
 
-Returns: Unified diff format string showing the changes made in the commit.`,
+Returns: Unified diff format string showing all changes made in the commit.`,
     parameters: {
       type: 'object',
       properties: {
@@ -28,10 +27,6 @@ Returns: Unified diff format string showing the changes made in the commit.`,
         commitHash: {
           type: 'string',
           description: 'Full or abbreviated commit SHA.',
-        },
-        filePath: {
-          type: 'string',
-          description: 'Optional file path to get diff for only that file.',
         },
         token: {
           type: 'string',
@@ -59,23 +54,5 @@ export const handler: ToolFunction<GetCommitDiffParams> = async (args) => {
   // When requesting diff format, data is returned as a string
   const diffContent = diff as unknown as string;
 
-  if (!args.filePath) {
-    return diffContent || '(no diff content)';
-  }
-
-  // Filter diff to only include the specified file
-  const lines = diffContent.split('\n');
-  const result: string[] = [];
-  let inTargetFile = false;
-
-  for (const line of lines) {
-    if (line.startsWith('diff --git')) {
-      inTargetFile = line.includes(args.filePath);
-    }
-    if (inTargetFile) {
-      result.push(line);
-    }
-  }
-
-  return result.join('\n') || '(no diff content for specified file)';
+  return diffContent || '(no diff content)';
 };

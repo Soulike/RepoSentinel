@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@ai/openai-session": "workspace:*",
-    "@octokit/graphql": "^8.2.1",
     "@octokit/rest": "^21.1.1"
   },
   "devDependencies": {

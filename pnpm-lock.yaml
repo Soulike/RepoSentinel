@@ -141,9 +141,6 @@ importers:
       '@ai/openai-session':
         specifier: workspace:*
         version: link:../../libraries/openai-session
-      '@octokit/graphql':
-        specifier: ^8.2.1
-        version: 8.2.2
       '@octokit/rest':
         specifier: ^21.1.1
         version: 21.1.1
