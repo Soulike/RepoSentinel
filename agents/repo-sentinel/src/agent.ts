@@ -1,54 +1,46 @@
 import {Session, ToolRegistry, createOpenAIClient} from '@ai/openai-session';
-import type {ToolResult} from '@ai/openai-session';
+import type {ToolResult, ToolFunction} from '@ai/openai-session';
 import type {Logger} from '@helpers/logger';
-import {
-  getRepoStatus,
-  fetchRemote,
-  getRecentCommits,
-  getCommitDetails,
-  getCommitDiff,
-  getFileContent,
-  getFileHistory,
-  getBlame,
-  searchCommits,
-  listChangedFiles,
-} from '@openai-tools/git';
-import {SYSTEM_PROMPT} from './prompts/system-prompt.js';
+import * as gitTools from '@openai-tools/git';
+import * as githubTools from '@openai-tools/github';
+import {createSystemPrompt} from './prompts/system-prompt.js';
 import {createUserPrompt} from './prompts/user-prompt.js';
 import {
   getOpenAIApiKey,
   getOpenAIBaseURL,
   getOpenAIModel,
+  getRepoProvider,
 } from './helpers/env-helpers.js';
+import type {RepoProvider} from './types.js';
 
 // Import agent-specific tools
 import * as getConfig from './tools/get-config.js';
 import * as saveReport from './tools/save-report.js';
 
-function createToolRegistry(): ToolRegistry {
+function createToolRegistry(provider: RepoProvider): ToolRegistry {
   const registry = new ToolRegistry();
 
   // Register agent-specific tools
   registry.register(getConfig.definition, getConfig.handler);
   registry.register(saveReport.definition, saveReport.handler);
 
-  // Register git tools from the shared package
-  registry.register(getRepoStatus.definition, getRepoStatus.handler);
-  registry.register(fetchRemote.definition, fetchRemote.handler);
-  registry.register(getRecentCommits.definition, getRecentCommits.handler);
-  registry.register(getCommitDetails.definition, getCommitDetails.handler);
-  registry.register(getCommitDiff.definition, getCommitDiff.handler);
-  registry.register(getFileContent.definition, getFileContent.handler);
-  registry.register(getFileHistory.definition, getFileHistory.handler);
-  registry.register(getBlame.definition, getBlame.handler);
-  registry.register(searchCommits.definition, searchCommits.handler);
-  registry.register(listChangedFiles.definition, listChangedFiles.handler);
+  // Register provider-specific tools
+  if (provider === 'github') {
+    for (const tool of githubTools.allTools) {
+      registry.register(tool.definition, tool.handler as ToolFunction);
+    }
+  } else {
+    for (const tool of gitTools.allTools) {
+      registry.register(tool.definition, tool.handler as ToolFunction);
+    }
+  }
 
   return registry;
 }
 
 export async function runAgent(logger: Logger): Promise<void> {
-  const registry = createToolRegistry();
+  const provider = getRepoProvider();
+  const registry = createToolRegistry(provider);
 
   const client = createOpenAIClient({
     apiKey: getOpenAIApiKey(),
@@ -58,11 +50,11 @@ export async function runAgent(logger: Logger): Promise<void> {
   const session = new Session({
     client,
     model: getOpenAIModel(),
-    systemPrompt: SYSTEM_PROMPT,
+    systemPrompt: createSystemPrompt(provider),
     tools: registry.getToolDefinitions(),
   });
 
-  logger.info('Starting RepoSentinel agent...');
+  logger.info(`Starting RepoSentinel agent with ${provider} provider...`);
 
   let response = await session.chat(createUserPrompt());
 

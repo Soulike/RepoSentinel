@@ -65,5 +65,15 @@ export const handler: ToolFunction<GetRecentCommitsParams> = async (args) => {
     ...(args.path && {path: args.path}),
   });
 
-  return JSON.stringify(data);
+  // Extract only essential fields to match git tool output
+  const commits = data.map((commit) => ({
+    hash: commit.sha,
+    shortHash: commit.sha.slice(0, 7),
+    author: commit.commit.author?.name ?? '',
+    date: commit.commit.author?.date ?? '',
+    // First line only (subject) to match git's %s format
+    message: commit.commit.message.split('\n')[0] ?? '',
+  }));
+
+  return JSON.stringify(commits);
 };

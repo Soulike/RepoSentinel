@@ -46,6 +46,9 @@ importers:
       '@openai-tools/git':
         specifier: workspace:*
         version: link:../../tools/git
+      '@openai-tools/github':
+        specifier: workspace:*
+        version: link:../../tools/github
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3

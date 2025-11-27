@@ -1,3 +1,5 @@
+import type {RepoProvider} from '../types.js';
+
 // OpenAI configuration
 export function getOpenAIApiKey(): string {
   const apiKey = process.env['OPENAI_API_KEY'];
@@ -12,10 +14,23 @@ export function getOpenAIBaseURL(): string | undefined {
 }
 
 export function getOpenAIModel(): string {
-  return process.env['OPENAI_MODEL'] ?? 'gpt-4';
+  const model = process.env['OPENAI_MODEL'];
+  if (!model) {
+    throw new Error('OPENAI_MODEL environment variable is not set');
+  }
+  return model;
 }
 
-// Agent configuration
+// Provider configuration
+export function getRepoProvider(): RepoProvider {
+  const provider = process.env['REPO_PROVIDER'];
+  if (provider !== 'local' && provider !== 'github') {
+    throw new Error('REPO_PROVIDER must be "local" or "github"');
+  }
+  return provider;
+}
+
+// Local provider configuration
 export function getRepoPath(): string {
   const repoPath = process.env['REPO_PATH'];
   if (!repoPath) {
@@ -23,6 +38,29 @@ export function getRepoPath(): string {
   }
   return repoPath;
 }
+
+// GitHub provider configuration
+export function getGitHubOwner(): string {
+  const owner = process.env['GITHUB_OWNER'];
+  if (!owner) {
+    throw new Error('GITHUB_OWNER environment variable is not set');
+  }
+  return owner;
+}
+
+export function getGitHubRepo(): string {
+  const repo = process.env['GITHUB_REPO'];
+  if (!repo) {
+    throw new Error('GITHUB_REPO environment variable is not set');
+  }
+  return repo;
+}
+
+export function getGitHubToken(): string | undefined {
+  return process.env['GITHUB_TOKEN'];
+}
+
+// Agent configuration
 
 export function getBranch(): string {
   const branch = process.env['BRANCH'];
@@ -51,7 +89,7 @@ export function getReportDir(): string {
 export function getSubPath(): string[] {
   const subPath = process.env['SUB_PATH'];
   if (!subPath) {
-    throw new Error('SUB_PATH environment variable is not set');
+    return [];
   }
   return subPath.split(',').map((p) => p.trim());
 }
