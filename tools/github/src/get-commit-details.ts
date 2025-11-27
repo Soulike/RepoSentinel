@@ -56,21 +56,25 @@ export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
     renamed: 'renamed',
     copied: 'added',
     changed: 'modified',
-    unchanged: 'modified',
   };
 
   // Extract only essential fields to match git tool output
+  // Filter out files with 'unchanged' status as they have no net changes
+  const files = (data.files ?? [])
+    .filter((file) => file.status !== 'unchanged')
+    .map((file) => ({
+      path: file.filename,
+      status: statusMap[file.status ?? 'modified'] ?? 'modified',
+      additions: file.additions,
+      deletions: file.deletions,
+    }));
+
   const result = {
     hash: data.sha,
     author: data.commit.author?.name ?? '',
     date: data.commit.author?.date ?? '',
     message: data.commit.message,
-    files: (data.files ?? []).map((file) => ({
-      path: file.filename,
-      status: statusMap[file.status ?? 'modified'] ?? 'modified',
-      additions: file.additions,
-      deletions: file.deletions,
-    })),
+    files,
   };
 
   return JSON.stringify(result);
