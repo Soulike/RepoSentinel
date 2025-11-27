@@ -17,7 +17,7 @@ export interface GitHubConfig extends BaseConfig {
   provider: 'github';
   owner: string;
   repo: string;
-  token?: string | undefined;
+  token: string | null;
 }
 
 export type Config = LocalConfig | GitHubConfig;

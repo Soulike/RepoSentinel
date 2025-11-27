@@ -1,11 +1,12 @@
 export class GitHubTokenStore {
-  private static token: string | undefined;
+  private static token: string | null = null;
 
   static set(token: string): void {
-    GitHubTokenStore.token = token;
+    GitHubTokenStore.token = Buffer.from(token, 'utf-8').toString('base64');
   }
 
-  static get(): string | undefined {
-    return GitHubTokenStore.token;
+  static get(): string | null {
+    if (!GitHubTokenStore.token) return null;
+    return Buffer.from(GitHubTokenStore.token, 'base64').toString('utf-8');
   }
 }

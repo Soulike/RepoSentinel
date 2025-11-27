@@ -1,5 +1,3 @@
-import {TokenStorage} from './token-storage.js';
-
 const GITHUB_CLIENT_ID = 'Ov23liMB5j5DBLrvNvec';
 const DEVICE_CODE_URL = 'https://github.com/login/device/code';
 const ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token';
@@ -125,8 +123,6 @@ export async function authenticateWithDeviceFlow(
   console.log('Waiting for authorization...');
 
   const token = await pollForToken(deviceCode);
-
-  TokenStorage.set(token.access_token);
 
   console.log('✓ Authenticated successfully\n');
   return token.access_token;
