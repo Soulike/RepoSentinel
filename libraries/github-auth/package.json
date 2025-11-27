@@ -17,9 +17,6 @@
   "scripts": {
     "build": "tsc"
   },
-  "dependencies": {
-    "keytar": "^7.9.0"
-  },
   "devDependencies": {
     "@configs/eslint": "workspace:*",
     "@configs/typescript": "workspace:*",

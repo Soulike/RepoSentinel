@@ -1,6 +1,6 @@
-import {getStoredToken, storeToken, deleteToken} from './token-storage.js';
+import {TokenStorage} from './token-storage.js';
 
-const GITHUB_CLIENT_ID = '01ab8ac9400c4e429b23';
+const GITHUB_CLIENT_ID = 'Ov23liMB5j5DBLrvNvec';
 const DEVICE_CODE_URL = 'https://github.com/login/device/code';
 const ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
@@ -106,38 +106,17 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function validateToken(token: string): Promise<boolean> {
-  const response = await fetch('https://api.github.com/user', {
-    headers: {Authorization: `Bearer ${token}`},
-  });
-  return response.ok;
-}
-
 /**
  * Authenticate with GitHub using the OAuth device flow.
  *
- * First checks for a stored token in the system keychain. If found and valid,
- * returns it immediately. Otherwise, runs the OAuth device flow and stores
- * the new token.
+ * Displays a URL and code to the user, then polls for authorization.
  *
- * @param scopes - OAuth scopes to request (default: ['repo'])
+ * @param scopes - OAuth scopes to request
  * @returns Access token for GitHub API
  */
 export async function authenticateWithDeviceFlow(
-  scopes: string[] = ['repo'],
+  scopes: string[],
 ): Promise<string> {
-  // Check for existing token in keychain
-  const existingToken = await getStoredToken();
-  if (existingToken) {
-    const isValid = await validateToken(existingToken);
-    if (isValid) {
-      console.log('✓ Using saved GitHub credentials\n');
-      return existingToken;
-    }
-    // Token invalid, delete and re-auth
-    await deleteToken();
-  }
-
   const deviceCode = await requestDeviceCode(scopes);
 
   console.log('\nGitHub authentication required.');
@@ -147,8 +126,7 @@ export async function authenticateWithDeviceFlow(
 
   const token = await pollForToken(deviceCode);
 
-  // Store token in keychain for future use
-  await storeToken(token.access_token);
+  TokenStorage.set(token.access_token);
 
   console.log('✓ Authenticated successfully\n');
   return token.access_token;

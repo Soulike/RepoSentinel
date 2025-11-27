@@ -1,16 +1,16 @@
-import * as keytar from 'keytar';
+export class TokenStorage {
+  private static token: string | null = null;
 
-const SERVICE = 'repo-sentinel';
-const ACCOUNT = 'github-token';
+  static get(): string | null {
+    if (!TokenStorage.token) return null;
+    return Buffer.from(TokenStorage.token, 'base64').toString('utf-8');
+  }
 
-export async function getStoredToken(): Promise<string | null> {
-  return keytar.getPassword(SERVICE, ACCOUNT);
-}
+  static set(token: string): void {
+    TokenStorage.token = Buffer.from(token, 'utf-8').toString('base64');
+  }
 
-export async function storeToken(token: string): Promise<void> {
-  await keytar.setPassword(SERVICE, ACCOUNT, token);
-}
-
-export async function deleteToken(): Promise<void> {
-  await keytar.deletePassword(SERVICE, ACCOUNT);
+  static clear(): void {
+    TokenStorage.token = null;
+  }
 }

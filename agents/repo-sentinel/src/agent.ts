@@ -48,7 +48,7 @@ export async function runAgent(logger: Logger): Promise<void> {
 
   // Authenticate with GitHub if using GitHub provider
   if (provider === 'github') {
-    const token = await authenticateWithDeviceFlow();
+    const token = await authenticateWithDeviceFlow(['repo']);
     GitHubTokenStore.set(token);
   }
 
