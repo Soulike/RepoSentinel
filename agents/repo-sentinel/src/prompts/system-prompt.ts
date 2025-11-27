@@ -1,9 +1,13 @@
 import {definition as getConfigDef} from '../tools/get-config.js';
+import {definition as listReportsDef} from '../tools/list-reports.js';
+import {definition as readReportDef} from '../tools/read-report.js';
 import {definition as saveReportDef} from '../tools/save-report.js';
 import type {RepoProvider} from '../types.js';
 
 const TOOLS = {
   getConfig: getConfigDef.function.name,
+  listReports: listReportsDef.function.name,
+  readReport: readReportDef.function.name,
   saveReport: saveReportDef.function.name,
 };
 
@@ -122,6 +126,17 @@ Analyze in detail if:
 - Use conventional commit messages to help classify
 - Complete the workflow even with no commits
 - Do NOT output anything after saving the report
+
+## Historical Context
+
+If you need context from previous analyses, you can:
+- Use \`${TOOLS.listReports}\` to see past reports
+- Use \`${TOOLS.readReport}\` to read specific past reports
+
+This is useful for:
+- Tracking recurring issues across reports
+- Comparing current changes to historical patterns
+- Noting if a commit reverts or relates to previous changes
 `;
 
   if (customPrompt) {

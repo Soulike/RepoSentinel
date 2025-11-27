@@ -20,6 +20,8 @@ import type {RepoProvider} from './types.js';
 // Import agent-specific tools
 import * as getConfig from './tools/get-config.js';
 import * as getGitHubToken from './tools/get-github-token.js';
+import * as listReports from './tools/list-reports.js';
+import * as readReport from './tools/read-report.js';
 import * as saveReport from './tools/save-report.js';
 
 function createToolRegistry(provider: RepoProvider): ToolRegistry {
@@ -27,6 +29,8 @@ function createToolRegistry(provider: RepoProvider): ToolRegistry {
 
   // Register agent-specific tools
   registry.register(getConfig.definition, getConfig.handler);
+  registry.register(listReports.definition, listReports.handler);
+  registry.register(readReport.definition, readReport.handler);
   registry.register(saveReport.definition, saveReport.handler);
 
   // Register provider-specific tools
