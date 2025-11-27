@@ -24,11 +24,13 @@ export async function gerritFetchRaw(url: string): Promise<string> {
 export function buildUrl(
   host: string,
   path: string,
-  params?: Record<string, string>,
+  params?: Record<string, string[]>,
 ): string {
   const url = new URL(`https://${host}${path}`);
   if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
+    Object.entries(params).forEach(([k, values]) => {
+      values.forEach((v) => url.searchParams.append(k, v));
+    });
   }
   return url.toString();
 }

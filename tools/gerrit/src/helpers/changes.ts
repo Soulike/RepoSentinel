@@ -34,8 +34,8 @@ export async function fetchChanges(
   query: string,
 ): Promise<ChangeInfo[]> {
   const url = buildUrl(host, '/changes/', {
-    q: query,
-    n: '100',
+    q: [query],
+    n: ['100'],
   });
 
   const data = await gerritFetch<ChangeInfoResponse[]>(url);

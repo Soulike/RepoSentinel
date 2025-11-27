@@ -60,13 +60,10 @@ Returns: JSON object with change details including commit info.`,
 
 export const handler: ToolFunction<GetChangeDetailsParams> = async (args) => {
   const url = buildUrl(args.host, `/changes/${args.changeId}`, {
-    o: 'CURRENT_REVISION',
+    o: ['CURRENT_REVISION', 'CURRENT_COMMIT'],
   });
 
-  // Need to add CURRENT_COMMIT as a second 'o' param
-  const fullUrl = url + '&o=CURRENT_COMMIT';
-
-  const data = await gerritFetch<ChangeInfo>(fullUrl);
+  const data = await gerritFetch<ChangeInfo>(url);
 
   const currentRevision = data.current_revision;
   const revision = currentRevision ? data.revisions?.[currentRevision] : null;
