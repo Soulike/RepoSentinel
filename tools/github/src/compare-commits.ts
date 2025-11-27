@@ -2,17 +2,18 @@ import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions
 import type {ToolFunction} from '@ai/openai-session';
 import {createOctokit, type GitHubBaseParams} from './github-helpers.js';
 
-export interface GetCommitDetailsParams extends GitHubBaseParams {
-  commitHash: string;
+export interface CompareCommitsParams extends GitHubBaseParams {
+  base: string;
+  head: string;
 }
 
 export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
-    name: 'github_get_commit_details',
-    description: `Get detailed information about a specific commit including changed files.
+    name: 'github_compare_commits',
+    description: `Compare two commits, branches, or tags to see the diff between them.
 
-Returns: JSON commit object from GitHub API with full details and files array.`,
+Returns: JSON object with comparison summary and list of changed files.`,
     parameters: {
       type: 'object',
       properties: {
@@ -24,9 +25,13 @@ Returns: JSON commit object from GitHub API with full details and files array.`,
           type: 'string',
           description: 'Repository name.',
         },
-        commitHash: {
+        base: {
           type: 'string',
-          description: 'Full or abbreviated commit SHA.',
+          description: 'Base commit SHA, branch name, or tag to compare from.',
+        },
+        head: {
+          type: 'string',
+          description: 'Head commit SHA, branch name, or tag to compare to.',
         },
         token: {
           type: 'string',
@@ -34,18 +39,19 @@ Returns: JSON commit object from GitHub API with full details and files array.`,
             'Optional GitHub token for private repos or higher rate limits.',
         },
       },
-      required: ['owner', 'repo', 'commitHash'],
+      required: ['owner', 'repo', 'base', 'head'],
     },
   },
 };
 
-export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
+export const handler: ToolFunction<CompareCommitsParams> = async (args) => {
   const octokit = createOctokit(args.token);
 
-  const {data} = await octokit.repos.getCommit({
+  const {data} = await octokit.repos.compareCommits({
     owner: args.owner,
     repo: args.repo,
-    ref: args.commitHash,
+    base: args.base,
+    head: args.head,
   });
 
   const files = (data.files ?? [])
@@ -57,11 +63,21 @@ export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
       deletions: file.deletions,
     }));
 
+  const commits = data.commits.map((commit) => ({
+    hash: commit.sha,
+    shortHash: commit.sha.slice(0, 7),
+    author: commit.commit.author?.name ?? '',
+    date: commit.commit.author?.date ?? '',
+    // First line only (subject) to match git's %s format
+    message: commit.commit.message.split('\n')[0] ?? '',
+  }));
+
   const result = {
-    hash: data.sha,
-    author: data.commit.author?.name ?? '',
-    date: data.commit.author?.date ?? '',
-    message: data.commit.message,
+    status: data.status,
+    aheadBy: data.ahead_by,
+    behindBy: data.behind_by,
+    totalCommits: data.total_commits,
+    commits,
     files,
   };
 

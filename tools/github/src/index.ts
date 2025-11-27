@@ -8,6 +8,7 @@ export * as getCommitDetails from './get-commit-details.js';
 export * as getCommitDiff from './get-commit-diff.js';
 export * as getFileContent from './get-file-content.js';
 export * as getFileHistory from './get-file-history.js';
+export * as compareCommits from './compare-commits.js';
 
 // Re-export param types
 export type {GetRepoStatusParams} from './get-repo-status.js';
@@ -16,6 +17,7 @@ export type {GetCommitDetailsParams} from './get-commit-details.js';
 export type {GetCommitDiffParams} from './get-commit-diff.js';
 export type {GetFileContentParams} from './get-file-content.js';
 export type {GetFileHistoryParams} from './get-file-history.js';
+export type {CompareCommitsParams} from './compare-commits.js';
 
 // Convenience: Import all tools for bulk registration
 import * as getRepoStatus from './get-repo-status.js';
@@ -24,6 +26,7 @@ import * as getCommitDetails from './get-commit-details.js';
 import * as getCommitDiff from './get-commit-diff.js';
 import * as getFileContent from './get-file-content.js';
 import * as getFileHistory from './get-file-history.js';
+import * as compareCommits from './compare-commits.js';
 
 /**
  * Array of all GitHub tools for bulk registration with ToolRegistry.
@@ -46,4 +49,5 @@ export const allTools = [
   getCommitDiff,
   getFileContent,
   getFileHistory,
+  compareCommits,
 ] as const;
