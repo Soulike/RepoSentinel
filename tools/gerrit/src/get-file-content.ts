@@ -45,11 +45,12 @@ Returns: File content as text. Returns an error JSON object for binary files.`,
 
 export const handler: ToolFunction<GetFileContentParams> = async (args) => {
   const revision = args.revision ?? 'current';
+  const encodedChangeId = encodeURIComponent(args.changeId);
   const encodedPath = encodeURIComponent(args.filePath);
 
   const url = buildUrl(
     args.host,
-    `/changes/${args.changeId}/revisions/${revision}/files/${encodedPath}/content`,
+    `/changes/${encodedChangeId}/revisions/${revision}/files/${encodedPath}/content`,
   );
 
   const base64Content = await gerritFetchRaw(url);

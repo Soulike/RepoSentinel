@@ -47,9 +47,10 @@ Returns: JSON array of changed files with stats.`,
 
 export const handler: ToolFunction<GetChangedFilesParams> = async (args) => {
   const revision = args.revision ?? 'current';
+  const encodedChangeId = encodeURIComponent(args.changeId);
   const url = buildUrl(
     args.host,
-    `/changes/${args.changeId}/revisions/${revision}/files/`,
+    `/changes/${encodedChangeId}/revisions/${revision}/files/`,
   );
 
   const data = await gerritFetch<Record<string, FileInfo>>(url);

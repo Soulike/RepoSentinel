@@ -59,7 +59,8 @@ Returns: JSON object with change details including commit info.`,
 };
 
 export const handler: ToolFunction<GetChangeDetailsParams> = async (args) => {
-  const url = buildUrl(args.host, `/changes/${args.changeId}`, {
+  const encodedChangeId = encodeURIComponent(args.changeId);
+  const url = buildUrl(args.host, `/changes/${encodedChangeId}`, {
     o: ['CURRENT_REVISION', 'CURRENT_COMMIT'],
   });
 

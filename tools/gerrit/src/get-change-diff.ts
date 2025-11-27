@@ -39,9 +39,10 @@ Returns: Plain text unified diff.`,
 
 export const handler: ToolFunction<GetChangeDiffParams> = async (args) => {
   const revision = args.revision ?? 'current';
+  const encodedChangeId = encodeURIComponent(args.changeId);
   const url = buildUrl(
     args.host,
-    `/changes/${args.changeId}/revisions/${revision}/patch`,
+    `/changes/${encodedChangeId}/revisions/${revision}/patch`,
   );
 
   const base64Patch = await gerritFetchRaw(url);
