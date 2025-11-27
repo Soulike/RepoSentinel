@@ -22,6 +22,20 @@ import * as getFileContent from './get-file-content.js';
 import * as getProjectInfo from './get-project-info.js';
 import * as getChangedFiles from './get-changed-files.js';
 
+/**
+ * Array of all Gerrit tools for bulk registration with ToolRegistry.
+ *
+ * @example
+ * ```typescript
+ * import { allTools } from '@openai-tools/gerrit';
+ * import { ToolRegistry } from '@ai/openai-session';
+ *
+ * const registry = new ToolRegistry();
+ * for (const tool of allTools) {
+ *   registry.register(tool.definition, tool.handler);
+ * }
+ * ```
+ */
 export const allTools = [
   getDirectoryChanges,
   getFileChanges,
