@@ -3,7 +3,9 @@ const XSSI_PREFIX = ")]}'\n";
 export async function gerritFetch<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Gerrit API error: ${response.statusText}`);
+    throw new Error(
+      `Gerrit API error: ${response.status} ${response.statusText} for ${url}`,
+    );
   }
   const text = await response.text();
 
@@ -16,7 +18,9 @@ export async function gerritFetch<T>(url: string): Promise<T> {
 export async function gerritFetchRaw(url: string): Promise<string> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Gerrit API error: ${response.statusText}`);
+    throw new Error(
+      `Gerrit API error: ${response.status} ${response.statusText} for ${url}`,
+    );
   }
   return response.text();
 }
