@@ -46,6 +46,9 @@ importers:
       '@helpers/logger':
         specifier: workspace:*
         version: link:../../libraries/logger
+      '@openai-tools/gerrit':
+        specifier: workspace:*
+        version: link:../../tools/gerrit
       '@openai-tools/git':
         specifier: workspace:*
         version: link:../../tools/git

@@ -2,6 +2,7 @@ import {Session, ToolRegistry, createOpenAIClient} from '@ai/openai-session';
 import type {ToolResult, ToolFunction} from '@ai/openai-session';
 import type {Logger} from '@helpers/logger';
 import {authenticateWithDeviceFlow} from '@helpers/github-auth';
+import * as gerritTools from '@openai-tools/gerrit';
 import * as gitTools from '@openai-tools/git';
 import * as githubTools from '@openai-tools/github';
 import {createSystemPrompt} from './prompts/system-prompt.js';
@@ -32,6 +33,10 @@ function createToolRegistry(provider: RepoProvider): ToolRegistry {
   if (provider === 'github') {
     registry.register(getGitHubToken.definition, getGitHubToken.handler);
     for (const tool of githubTools.allTools) {
+      registry.register(tool.definition, tool.handler as ToolFunction);
+    }
+  } else if (provider === 'gerrit') {
+    for (const tool of gerritTools.allTools) {
       registry.register(tool.definition, tool.handler as ToolFunction);
     }
   } else {

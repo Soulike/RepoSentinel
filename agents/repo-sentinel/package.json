@@ -12,6 +12,7 @@
     "@ai/openai-session": "workspace:*",
     "@helpers/github-auth": "workspace:*",
     "@helpers/logger": "workspace:*",
+    "@openai-tools/gerrit": "workspace:*",
     "@openai-tools/git": "workspace:*",
     "@openai-tools/github": "workspace:*",
     "dotenv": "^17.2.3",

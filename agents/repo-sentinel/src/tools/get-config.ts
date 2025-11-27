@@ -6,6 +6,8 @@ import {
   getRepoPath,
   getGitHubOwner,
   getGitHubRepo,
+  getGerritHost,
+  getGerritProject,
   getBranch,
   getCheckIntervalHours,
   getReportDir,
@@ -20,7 +22,7 @@ export const definition: ChatCompletionFunctionTool = {
     description: `Get the current RepoSentinel configuration.
 
 Returns: JSON object with:
-- provider: "local" or "github"
+- provider: "local", "github", or "gerrit"
 - branch: Branch name to monitor
 - checkIntervalHours: Number of hours to look back
 - reportDir: Directory to save reports
@@ -32,7 +34,11 @@ For local provider:
 For github provider:
 - owner: Repository owner (use as owner parameter for github tools)
 - repo: Repository name (use as repo parameter for github tools)
-- token: GitHub access token (use as token parameter for github tools)`,
+- token: GitHub access token (use as token parameter for github tools)
+
+For gerrit provider:
+- host: Gerrit host (use as host parameter for gerrit tools)
+- project: Project name (use as project parameter for gerrit tools)`,
     parameters: {
       type: 'object',
       properties: {},
@@ -60,6 +66,13 @@ export const handler: ToolFunction<Record<string, never>> = async () => {
       owner: getGitHubOwner(),
       repo: getGitHubRepo(),
       token: GitHubTokenStore.get(),
+    };
+  } else if (provider === 'gerrit') {
+    config = {
+      ...baseConfig,
+      provider: 'gerrit',
+      host: getGerritHost(),
+      project: getGerritProject(),
     };
   } else {
     config = {

@@ -25,8 +25,8 @@ export function getOpenAIModel(): string {
 // Provider configuration
 export function getRepoProvider(): RepoProvider {
   const provider = process.env['REPO_PROVIDER'];
-  if (provider !== 'local' && provider !== 'github') {
-    throw new Error('REPO_PROVIDER must be "local" or "github"');
+  if (provider !== 'local' && provider !== 'github' && provider !== 'gerrit') {
+    throw new Error('REPO_PROVIDER must be "local", "github", or "gerrit"');
   }
   return provider;
 }
@@ -55,6 +55,23 @@ export function getGitHubRepo(): string {
     throw new Error('GITHUB_REPO environment variable is not set');
   }
   return repo;
+}
+
+// Gerrit provider configuration
+export function getGerritHost(): string {
+  const host = process.env['GERRIT_HOST'];
+  if (!host) {
+    throw new Error('GERRIT_HOST environment variable is not set');
+  }
+  return host;
+}
+
+export function getGerritProject(): string {
+  const project = process.env['GERRIT_PROJECT'];
+  if (!project) {
+    throw new Error('GERRIT_PROJECT environment variable is not set');
+  }
+  return project;
 }
 
 // Agent configuration

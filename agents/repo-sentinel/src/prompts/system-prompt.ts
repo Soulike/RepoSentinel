@@ -14,6 +14,12 @@ function getWorkflowSteps(provider: RepoProvider): string {
 3. Get recent commits for the configured branch and time window
 4. For each commit: get details, diff, classify, analyze vital commits
 5. Generate and save report using \`${TOOLS.saveReport}\``;
+  } else if (provider === 'gerrit') {
+    return `1. Call \`${TOOLS.getConfig}\` to get configuration
+2. Get project info to verify access
+3. Get recent changes (merged) for the configured branch and time window
+4. For each change: get details, diff, classify, analyze vital changes
+5. Generate and save report using \`${TOOLS.saveReport}\``;
   } else {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Check repository status
@@ -27,6 +33,8 @@ function getWorkflowSteps(provider: RepoProvider): string {
 function getProviderNote(provider: RepoProvider): string {
   if (provider === 'github') {
     return 'Use `owner`, `repo`, and `token` from config for all repository tools.';
+  } else if (provider === 'gerrit') {
+    return 'Use `host` and `project` from config for all Gerrit tools. No authentication required.';
   } else {
     return 'Use `repoPath` from config for all git tools.';
   }
