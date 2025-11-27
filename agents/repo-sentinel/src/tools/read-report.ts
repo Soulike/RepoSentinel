@@ -29,24 +29,14 @@ Returns: The report content as markdown text, or error JSON if file not found.`,
 };
 
 export const handler: ToolFunction<ReadReportParams> = async (args) => {
-  const {filename} = args;
+  // Sanitize: strip directory components first
+  const safeFilename = basename(args.filename);
 
-  // Security: prevent path traversal
-  if (
-    filename.includes('..') ||
-    filename.includes('/') ||
-    filename.includes('\\')
-  ) {
-    return JSON.stringify({error: 'Invalid filename'});
-  }
-
-  // Security: only allow .md files
-  if (!filename.endsWith('.md')) {
+  // Validate: only allow .md files
+  if (!safeFilename.endsWith('.md')) {
     return JSON.stringify({error: 'Only .md files can be read'});
   }
 
-  // Ensure filename is just the basename
-  const safeFilename = basename(filename);
   const reportDir = getReportDir();
   const filePath = join(reportDir, safeFilename);
 

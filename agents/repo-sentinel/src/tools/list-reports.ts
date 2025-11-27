@@ -5,7 +5,7 @@ import {join} from 'path';
 import {getReportDir} from '../helpers/env-helpers.js';
 
 export interface ListReportsParams {
-  limit?: number;
+  limit: number;
 }
 
 export const definition: ChatCompletionFunctionTool = {
@@ -20,10 +20,10 @@ Returns: JSON array of report objects with filename and modifiedAt timestamp.`,
       properties: {
         limit: {
           type: 'number',
-          description: 'Maximum number of reports to return. Defaults to 10.',
+          description: 'Maximum number of reports to return (1-100).',
         },
       },
-      required: [],
+      required: ['limit'],
     },
   },
 };
@@ -33,8 +33,15 @@ interface ReportInfo {
   modifiedAt: string;
 }
 
+const MAX_LIMIT = 100;
+
 export const handler: ToolFunction<ListReportsParams> = async (args) => {
-  const limit = args.limit ?? 10;
+  const {limit} = args;
+
+  if (limit < 1 || limit > MAX_LIMIT) {
+    return JSON.stringify({error: `limit must be between 1 and ${MAX_LIMIT}`});
+  }
+
   const reportDir = getReportDir();
 
   let files: string[];
@@ -46,19 +53,22 @@ export const handler: ToolFunction<ListReportsParams> = async (args) => {
 
   const mdFiles = files.filter((f) => f.endsWith('.md'));
 
-  const reports: ReportInfo[] = [];
-  for (const filename of mdFiles) {
-    const filePath = join(reportDir, filename);
-    try {
-      const stats = await stat(filePath);
-      reports.push({
-        filename,
-        modifiedAt: stats.mtime.toISOString(),
-      });
-    } catch {
-      // Skip files that become inaccessible
-    }
-  }
+  const results = await Promise.all(
+    mdFiles.map(async (filename): Promise<ReportInfo | null> => {
+      const filePath = join(reportDir, filename);
+      try {
+        const stats = await stat(filePath);
+        return {
+          filename,
+          modifiedAt: stats.mtime.toISOString(),
+        };
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  const reports = results.filter((r): r is ReportInfo => r !== null);
 
   reports.sort(
     (a, b) =>
