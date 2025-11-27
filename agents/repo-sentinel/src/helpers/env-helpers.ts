@@ -14,7 +14,11 @@ export function getOpenAIBaseURL(): string | undefined {
 }
 
 export function getOpenAIModel(): string {
-  return process.env['OPENAI_MODEL'] ?? 'gpt-4';
+  const model = process.env['OPENAI_MODEL'];
+  if (!model) {
+    throw new Error('OPENAI_MODEL environment variable is not set');
+  }
+  return model;
 }
 
 // Provider configuration
