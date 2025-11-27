@@ -3,13 +3,15 @@ import type {ToolFunction} from '@ai/openai-session';
 import {
   gerritFetch,
   buildUrl,
+  buildGerritQuery,
+  formatGerritTimestamp,
   type GerritBaseParams,
 } from './gerrit-helpers.js';
 
-export interface GetRecentChangesParams extends GerritBaseParams {
-  branch?: string;
-  status?: string;
-  limit?: number;
+export interface GetDirectoryChangesParams extends GerritBaseParams {
+  branch: string;
+  hours: number;
+  directory?: string;
 }
 
 interface ChangeInfo {
@@ -30,8 +32,10 @@ interface ChangeInfo {
 export const definition: ChatCompletionFunctionTool = {
   type: 'function',
   function: {
-    name: 'gerrit_get_recent_changes',
-    description: `Get recent changes (code reviews) from a Gerrit project.
+    name: 'gerrit_get_directory_changes',
+    description: `Get recent merged changes from a branch within the last N hours, optionally filtered by directory.
+Use this for getting all changes or filtering by directory path.
+For filtering by specific file, use gerrit_get_file_changes instead.
 
 Returns: JSON array of change objects.`,
     parameters: {
@@ -47,35 +51,39 @@ Returns: JSON array of change objects.`,
         },
         branch: {
           type: 'string',
-          description: 'Optional branch name to filter by.',
+          description: 'Branch name to get changes from.',
         },
-        status: {
+        hours: {
+          type: 'number',
+          description: 'Number of hours to look back for changes.',
+        },
+        directory: {
           type: 'string',
           description:
-            'Optional status filter (open, merged, abandoned). Defaults to merged.',
-        },
-        limit: {
-          type: 'number',
-          description: 'Maximum number of changes to return. Defaults to 25.',
+            'Optional directory path to filter changes by (e.g., src/components).',
         },
       },
-      required: ['host', 'project'],
+      required: ['host', 'project', 'branch', 'hours'],
     },
   },
 };
 
-export const handler: ToolFunction<GetRecentChangesParams> = async (args) => {
-  const status = args.status ?? 'merged';
-  const limit = args.limit ?? 25;
+export const handler: ToolFunction<GetDirectoryChangesParams> = async (
+  args,
+) => {
+  const since = new Date(Date.now() - args.hours * 60 * 60 * 1000);
 
-  let query = `project:${args.project}+status:${status}`;
-  if (args.branch) {
-    query += `+branch:${args.branch}`;
-  }
+  const query = buildGerritQuery({
+    project: args.project,
+    status: 'merged',
+    branch: args.branch,
+    after: formatGerritTimestamp(since),
+    dir: args.directory,
+  });
 
   const url = buildUrl(args.host, '/changes/', {
     q: query,
-    n: String(limit),
+    n: '100',
   });
 
   const data = await gerritFetch<ChangeInfo[]>(url);
@@ -84,9 +92,7 @@ export const handler: ToolFunction<GetRecentChangesParams> = async (args) => {
     number: change._number,
     changeId: change.change_id,
     subject: change.subject,
-    status: change.status,
     branch: change.branch,
-    created: change.created,
     updated: change.updated,
     insertions: change.insertions,
     deletions: change.deletions,
