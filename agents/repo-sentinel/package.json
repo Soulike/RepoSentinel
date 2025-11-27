@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai/openai-session": "workspace:*",
+    "@helpers/github-auth": "workspace:*",
     "@helpers/logger": "workspace:*",
     "@openai-tools/git": "workspace:*",
     "@openai-tools/github": "workspace:*",

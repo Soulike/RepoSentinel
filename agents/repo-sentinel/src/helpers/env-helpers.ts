@@ -57,10 +57,6 @@ export function getGitHubRepo(): string {
   return repo;
 }
 
-export function getGitHubToken(): string | undefined {
-  return process.env['GITHUB_TOKEN'];
-}
-
 // Agent configuration
 
 export function getBranch(): string {

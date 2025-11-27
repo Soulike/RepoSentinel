@@ -6,12 +6,12 @@ import {
   getRepoPath,
   getGitHubOwner,
   getGitHubRepo,
-  getGitHubToken,
   getBranch,
   getCheckIntervalHours,
   getReportDir,
   getSubPath,
 } from '../helpers/env-helpers.js';
+import {GitHubTokenStore} from '../stores/github-token-store.js';
 
 export const definition: ChatCompletionFunctionTool = {
   type: 'function',
@@ -32,7 +32,7 @@ For local provider:
 For github provider:
 - owner: Repository owner (use as owner parameter for github tools)
 - repo: Repository name (use as repo parameter for github tools)
-- token: Optional GitHub token (use as token parameter for github tools)`,
+- token: GitHub access token (use as token parameter for github tools)`,
     parameters: {
       type: 'object',
       properties: {},
@@ -59,7 +59,7 @@ export const handler: ToolFunction<Record<string, never>> = async () => {
       provider: 'github',
       owner: getGitHubOwner(),
       repo: getGitHubRepo(),
-      token: getGitHubToken(),
+      token: GitHubTokenStore.get(),
     };
   } else {
     config = {
