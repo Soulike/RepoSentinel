@@ -1,5 +1,6 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
+import {isBinaryBase64} from '@helpers/binary-utils';
 import {gerritFetchRaw, buildUrl} from './helpers/fetch.js';
 
 export interface GetFileContentParams {
@@ -15,7 +16,7 @@ export const definition: ChatCompletionFunctionTool = {
     name: 'gerrit_get_file_content',
     description: `Get the content of a file from a Gerrit change revision.
 
-Returns: File content as text.`,
+Returns: File content as text. Returns an error JSON object for binary files.`,
     parameters: {
       type: 'object',
       properties: {
@@ -52,6 +53,14 @@ export const handler: ToolFunction<GetFileContentParams> = async (args) => {
   );
 
   const base64Content = await gerritFetchRaw(url);
+
+  if (isBinaryBase64(base64Content)) {
+    return JSON.stringify({
+      error: 'File is binary',
+      path: args.filePath,
+      changeId: args.changeId,
+    });
+  }
 
   // Gerrit returns file content as base64 encoded
   const content = Buffer.from(base64Content, 'base64').toString('utf-8');

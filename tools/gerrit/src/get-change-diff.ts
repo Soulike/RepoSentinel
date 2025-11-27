@@ -49,5 +49,5 @@ export const handler: ToolFunction<GetChangeDiffParams> = async (args) => {
   // Gerrit returns the patch as base64 encoded
   const patch = Buffer.from(base64Patch, 'base64').toString('utf-8');
 
-  return patch;
+  return patch || '(no diff content)';
 };
