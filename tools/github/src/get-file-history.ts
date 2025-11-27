@@ -66,6 +66,7 @@ export const handler: ToolFunction<GetFileHistoryParams> = async (args) => {
     shortHash: commit.sha.slice(0, 7),
     author: commit.commit.author?.name ?? '',
     date: commit.commit.author?.date ?? '',
+    // First line only (subject) to match git's %s format
     message: commit.commit.message.split('\n')[0] ?? '',
   }));
 
