@@ -27,8 +27,7 @@ Returns: JSON object with:
         },
         filename: {
           type: 'string',
-          description:
-            'Filename for the report (e.g., "2024-01-15-report.md"). Will be saved to REPORT_DIR.',
+          description: 'Filename for the report. Will be saved to REPORT_DIR.',
         },
       },
       required: ['content', 'filename'],
