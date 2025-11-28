@@ -1,5 +1,4 @@
-import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
-import type {ToolFunction} from '@ai/openai-session';
+import type {OpenAITool} from '@ai/openai-session';
 import {isBinary} from '@helpers/binary-utils';
 import {execGit} from './git-helpers.js';
 
@@ -9,50 +8,51 @@ export interface GetFileContentParams {
   filePath: string;
 }
 
-export const definition: ChatCompletionFunctionTool = {
-  type: 'function',
-  function: {
-    name: 'get_file_content',
-    description: `Read the content of a text file at a specific commit. Use "HEAD" for the current version.
+export const getFileContent: OpenAITool<GetFileContentParams> = {
+  definition: {
+    type: 'function',
+    function: {
+      name: 'get_file_content',
+      description: `Read the content of a text file at a specific commit. Use "HEAD" for the current version.
 
 Returns: File content as string. Returns an error for binary files.`,
-    parameters: {
-      type: 'object',
-      properties: {
-        repoPath: {
-          type: 'string',
-          description: 'Absolute path to the git repository.',
+      parameters: {
+        type: 'object',
+        properties: {
+          repoPath: {
+            type: 'string',
+            description: 'Absolute path to the git repository.',
+          },
+          commitHash: {
+            type: 'string',
+            description:
+              'The commit hash to read the file from. Use "HEAD" for the current version.',
+          },
+          filePath: {
+            type: 'string',
+            description: 'Path to the file relative to the repository root.',
+          },
         },
-        commitHash: {
-          type: 'string',
-          description:
-            'The commit hash to read the file from. Use "HEAD" for the current version.',
-        },
-        filePath: {
-          type: 'string',
-          description: 'Path to the file relative to the repository root.',
-        },
+        required: ['repoPath', 'commitHash', 'filePath'],
       },
-      required: ['repoPath', 'commitHash', 'filePath'],
     },
   },
-};
+  handler: async (args) => {
+    const {repoPath, commitHash, filePath} = args;
 
-export const handler: ToolFunction<GetFileContentParams> = async (args) => {
-  const {repoPath, commitHash, filePath} = args;
+    const content = await execGit(repoPath, [
+      'show',
+      `${commitHash}:${filePath}`,
+    ]);
 
-  const content = await execGit(repoPath, [
-    'show',
-    `${commitHash}:${filePath}`,
-  ]);
+    if (isBinary(content)) {
+      return JSON.stringify({
+        error: 'File is binary',
+        path: filePath,
+        commitHash,
+      });
+    }
 
-  if (isBinary(content)) {
-    return JSON.stringify({
-      error: 'File is binary',
-      path: filePath,
-      commitHash,
-    });
-  }
-
-  return content;
+    return content;
+  },
 };

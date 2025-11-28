@@ -6,14 +6,22 @@ import type {
 export type ToolFunction<T = unknown> = (args: T) => Promise<string> | string;
 
 /**
+ * A type-safe OpenAI tool that bundles definition and handler together.
+ */
+export interface OpenAITool<T> {
+  definition: ChatCompletionFunctionTool;
+  handler: ToolFunction<T>;
+}
+
+/**
  * Registry for mapping tool names to their implementations.
  *
  * @example
  * ```typescript
  * const registry = new ToolRegistry();
  *
- * registry.register(
- *   {
+ * const getWeather: OpenAITool<{ location: string }> = {
+ *   definition: {
  *     type: 'function',
  *     function: {
  *       name: 'get_weather',
@@ -27,10 +35,12 @@ export type ToolFunction<T = unknown> = (args: T) => Promise<string> | string;
  *       },
  *     },
  *   },
- *   async (args: { location: string }) => {
+ *   handler: async (args) => {
  *     return JSON.stringify({ temp: 20, condition: 'sunny' });
- *   }
- * );
+ *   },
+ * };
+ *
+ * registry.register(getWeather);
  *
  * // Get tool definitions for Session
  * const session = new Session({ tools: registry.getToolDefinitions() });
@@ -43,13 +53,18 @@ export class ToolRegistry {
   private tools = new Map<string, ChatCompletionFunctionTool>();
   private functions = new Map<string, ToolFunction>();
 
-  register<T>(
-    definition: ChatCompletionFunctionTool,
-    fn: ToolFunction<T>,
-  ): void {
-    const name = definition.function.name;
-    this.tools.set(name, definition);
-    this.functions.set(name, fn as ToolFunction);
+  register<T>(tool: OpenAITool<T>): void {
+    const name = tool.definition.function.name;
+    this.tools.set(name, tool.definition);
+    this.functions.set(name, tool.handler as ToolFunction);
+  }
+
+  registerAll<T extends unknown[]>(tools: {
+    [K in keyof T]: OpenAITool<T[K]>;
+  }): void {
+    for (const tool of tools) {
+      this.register(tool);
+    }
   }
 
   async execute(name: string, argsJson: string): Promise<string> {

@@ -1,10 +1,10 @@
-export * as getDirectoryChanges from './get-directory-changes.js';
-export * as getFileChanges from './get-file-changes.js';
-export * as getChangeDetails from './get-change-details.js';
-export * as getChangeDiff from './get-change-diff.js';
-export * as getFileContent from './get-file-content.js';
-export * as getProjectInfo from './get-project-info.js';
-export * as getChangedFiles from './get-changed-files.js';
+export {getDirectoryChanges} from './get-directory-changes.js';
+export {getFileChanges} from './get-file-changes.js';
+export {getChangeDetails} from './get-change-details.js';
+export {getChangeDiff} from './get-change-diff.js';
+export {getFileContent} from './get-file-content.js';
+export {getProjectInfo} from './get-project-info.js';
+export {getChangedFiles} from './get-changed-files.js';
 
 export type {GetDirectoryChangesParams} from './get-directory-changes.js';
 export type {GetFileChangesParams} from './get-file-changes.js';
@@ -14,13 +14,13 @@ export type {GetFileContentParams} from './get-file-content.js';
 export type {GetProjectInfoParams} from './get-project-info.js';
 export type {GetChangedFilesParams} from './get-changed-files.js';
 
-import * as getDirectoryChanges from './get-directory-changes.js';
-import * as getFileChanges from './get-file-changes.js';
-import * as getChangeDetails from './get-change-details.js';
-import * as getChangeDiff from './get-change-diff.js';
-import * as getFileContent from './get-file-content.js';
-import * as getProjectInfo from './get-project-info.js';
-import * as getChangedFiles from './get-changed-files.js';
+import {getDirectoryChanges} from './get-directory-changes.js';
+import {getFileChanges} from './get-file-changes.js';
+import {getChangeDetails} from './get-change-details.js';
+import {getChangeDiff} from './get-change-diff.js';
+import {getFileContent} from './get-file-content.js';
+import {getProjectInfo} from './get-project-info.js';
+import {getChangedFiles} from './get-changed-files.js';
 
 /**
  * Array of all Gerrit tools for bulk registration with ToolRegistry.
@@ -31,9 +31,7 @@ import * as getChangedFiles from './get-changed-files.js';
  * import { ToolRegistry } from '@ai/openai-session';
  *
  * const registry = new ToolRegistry();
- * for (const tool of allTools) {
- *   registry.register(tool.definition, tool.handler);
- * }
+ * registry.registerAll(allTools);
  * ```
  */
 export const allTools = [
@@ -44,4 +42,4 @@ export const allTools = [
   getFileContent,
   getProjectInfo,
   getChangedFiles,
-] as const;
+];

@@ -1,14 +1,14 @@
-import {definition as getConfigDef} from '../tools/get-config.js';
-import {definition as listReportsDef} from '../tools/list-reports.js';
-import {definition as readReportDef} from '../tools/read-report.js';
-import {definition as saveReportDef} from '../tools/save-report.js';
+import {getConfig} from '../tools/get-config.js';
+import {listReports} from '../tools/list-reports.js';
+import {readReport} from '../tools/read-report.js';
+import {saveReport} from '../tools/save-report.js';
 import type {RepoProvider} from '../types.js';
 
 const TOOLS = {
-  getConfig: getConfigDef.function.name,
-  listReports: listReportsDef.function.name,
-  readReport: readReportDef.function.name,
-  saveReport: saveReportDef.function.name,
+  getConfig: getConfig.definition.function.name,
+  listReports: listReports.definition.function.name,
+  readReport: readReport.definition.function.name,
+  saveReport: saveReport.definition.function.name,
 };
 
 function getWorkflowSteps(provider: RepoProvider): string {

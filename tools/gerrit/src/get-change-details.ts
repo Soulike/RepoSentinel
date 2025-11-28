@@ -1,5 +1,4 @@
-import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
-import type {ToolFunction} from '@ai/openai-session';
+import type {OpenAITool} from '@ai/openai-session';
 import {gerritFetch, buildUrl} from './helpers/fetch.js';
 
 export interface GetChangeDetailsParams {
@@ -34,65 +33,67 @@ interface ChangeInfo {
   revisions?: Record<string, RevisionInfo>;
 }
 
-export const definition: ChatCompletionFunctionTool = {
-  type: 'function',
-  function: {
-    name: 'gerrit_get_change_details',
-    description: `Get detailed information about a specific Gerrit change.
+export const getChangeDetails: OpenAITool<GetChangeDetailsParams> = {
+  definition: {
+    type: 'function',
+    function: {
+      name: 'gerrit_get_change_details',
+      description: `Get detailed information about a specific Gerrit change.
 
 Returns: JSON object with change details including commit info.`,
-    parameters: {
-      type: 'object',
-      properties: {
-        host: {
-          type: 'string',
-          description: 'Gerrit host (e.g., chromium-review.googlesource.com).',
+      parameters: {
+        type: 'object',
+        properties: {
+          host: {
+            type: 'string',
+            description:
+              'Gerrit host (e.g., chromium-review.googlesource.com).',
+          },
+          changeId: {
+            type: 'string',
+            description: 'Change ID (numeric ID or full change ID).',
+          },
         },
-        changeId: {
-          type: 'string',
-          description: 'Change ID (numeric ID or full change ID).',
-        },
+        required: ['host', 'changeId'],
       },
-      required: ['host', 'changeId'],
     },
   },
-};
+  handler: async (args) => {
+    const encodedChangeId = encodeURIComponent(args.changeId);
+    const url = buildUrl(args.host, `/changes/${encodedChangeId}`, {
+      o: ['CURRENT_REVISION', 'CURRENT_COMMIT'],
+    });
 
-export const handler: ToolFunction<GetChangeDetailsParams> = async (args) => {
-  const encodedChangeId = encodeURIComponent(args.changeId);
-  const url = buildUrl(args.host, `/changes/${encodedChangeId}`, {
-    o: ['CURRENT_REVISION', 'CURRENT_COMMIT'],
-  });
+    const data = await gerritFetch<ChangeInfo>(url);
 
-  const data = await gerritFetch<ChangeInfo>(url);
+    const currentRevision = data.current_revision;
+    const revision = currentRevision ? data.revisions?.[currentRevision] : null;
+    const commit = revision?.commit;
 
-  const currentRevision = data.current_revision;
-  const revision = currentRevision ? data.revisions?.[currentRevision] : null;
-  const commit = revision?.commit;
-
-  return JSON.stringify({
-    number: data._number,
-    changeId: data.change_id,
-    project: data.project,
-    branch: data.branch,
-    subject: data.subject,
-    status: data.status,
-    created: data.created,
-    updated: data.updated,
-    insertions: data.insertions,
-    deletions: data.deletions,
-    owner: {
-      name: data.owner.name ?? '',
-      email: data.owner.email ?? '',
-    },
-    currentRevision: currentRevision ?? null,
-    commit: commit
-      ? {
-          subject: commit.subject,
-          message: commit.message,
-          author: commit.author,
-          committer: commit.committer,
-        }
-      : null,
-  });
+    return JSON.stringify({
+      number: data._number,
+      changeId: data.change_id,
+      project: data.project,
+      branch: data.branch,
+      subject: data.subject,
+      status: data.status,
+      created: data.created,
+      updated: data.updated,
+      insertions: data.insertions,
+      deletions: data.deletions,
+      owner: {
+        name: data.owner.name ?? '',
+        email: data.owner.email ?? '',
+      },
+      currentRevision: currentRevision ?? null,
+      commit: commit
+        ? {
+            subject: commit.subject,
+            message: commit.message,
+            author: commit.author,
+            committer: commit.committer,
+          }
+        : null,
+    });
+  },
 };

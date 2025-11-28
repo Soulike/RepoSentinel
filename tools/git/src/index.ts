@@ -1,17 +1,17 @@
 // Git helper utilities
 export {execGit} from './git-helpers.js';
 
-// Individual tools - definitions and handlers
-export * as getRepoStatus from './get-repo-status.js';
-export * as fetchRemote from './fetch-remote.js';
-export * as getRecentCommits from './get-recent-commits.js';
-export * as getCommitDetails from './get-commit-details.js';
-export * as getCommitDiff from './get-commit-diff.js';
-export * as getFileContent from './get-file-content.js';
-export * as getFileHistory from './get-file-history.js';
-export * as getBlame from './get-blame.js';
-export * as searchCommits from './search-commits.js';
-export * as listChangedFiles from './list-changed-files.js';
+// Individual tools - named exports
+export {getRepoStatus} from './get-repo-status.js';
+export {fetchRemote} from './fetch-remote.js';
+export {getRecentCommits} from './get-recent-commits.js';
+export {getCommitDetails} from './get-commit-details.js';
+export {getCommitDiff} from './get-commit-diff.js';
+export {getFileContent} from './get-file-content.js';
+export {getFileHistory} from './get-file-history.js';
+export {getBlame} from './get-blame.js';
+export {searchCommits} from './search-commits.js';
+export {listChangedFiles} from './list-changed-files.js';
 
 // Re-export types
 export type {GetRepoStatusParams} from './get-repo-status.js';
@@ -33,16 +33,16 @@ export type {SearchCommit, SearchCommitsParams} from './search-commits.js';
 export type {ListChangedFilesParams} from './list-changed-files.js';
 
 // Convenience: Import all tools for bulk registration
-import * as getRepoStatus from './get-repo-status.js';
-import * as fetchRemote from './fetch-remote.js';
-import * as getRecentCommits from './get-recent-commits.js';
-import * as getCommitDetails from './get-commit-details.js';
-import * as getCommitDiff from './get-commit-diff.js';
-import * as getFileContent from './get-file-content.js';
-import * as getFileHistory from './get-file-history.js';
-import * as getBlame from './get-blame.js';
-import * as searchCommits from './search-commits.js';
-import * as listChangedFiles from './list-changed-files.js';
+import {getRepoStatus} from './get-repo-status.js';
+import {fetchRemote} from './fetch-remote.js';
+import {getRecentCommits} from './get-recent-commits.js';
+import {getCommitDetails} from './get-commit-details.js';
+import {getCommitDiff} from './get-commit-diff.js';
+import {getFileContent} from './get-file-content.js';
+import {getFileHistory} from './get-file-history.js';
+import {getBlame} from './get-blame.js';
+import {searchCommits} from './search-commits.js';
+import {listChangedFiles} from './list-changed-files.js';
 
 /**
  * Array of all git tools for bulk registration with ToolRegistry.
@@ -53,9 +53,7 @@ import * as listChangedFiles from './list-changed-files.js';
  * import { ToolRegistry } from '@ai/openai-session';
  *
  * const registry = new ToolRegistry();
- * for (const tool of allTools) {
- *   registry.register(tool.definition, tool.handler);
- * }
+ * registry.registerAll(allTools);
  * ```
  */
 export const allTools = [
@@ -69,4 +67,4 @@ export const allTools = [
   getBlame,
   searchCommits,
   listChangedFiles,
-] as const;
+];
