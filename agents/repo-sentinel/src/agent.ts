@@ -1,7 +1,7 @@
 import {Session, ToolRegistry, createOpenAIClient} from '@ai/openai-session';
 import type {ToolResult, ToolFunction} from '@ai/openai-session';
 import type {Logger} from '@helpers/logger';
-import {authenticateWithDeviceFlow} from '@helpers/github-auth';
+import {authenticateWithDeviceFlow, validateToken} from '@helpers/github-auth';
 import {getAdoAccessToken} from '@helpers/ado-auth';
 import * as adoTools from '@openai-tools/ado';
 import * as gerritTools from '@openai-tools/gerrit';
@@ -66,11 +66,16 @@ export async function runAgent(logger: Logger): Promise<void> {
 
   // Authenticate with GitHub if using GitHub provider
   if (provider === 'github') {
-    try {
-      const token = await authenticateWithDeviceFlow(['repo']);
-      GitHubTokenStore.set(token);
-    } catch (cause) {
-      throw new Error('GitHub authentication failed', {cause});
+    const existingToken = GitHubTokenStore.get();
+    const isValid = existingToken ? await validateToken(existingToken) : false;
+
+    if (!isValid) {
+      try {
+        const token = await authenticateWithDeviceFlow(['repo']);
+        GitHubTokenStore.set(token);
+      } catch (cause) {
+        throw new Error('GitHub authentication failed', {cause});
+      }
     }
   }
 
