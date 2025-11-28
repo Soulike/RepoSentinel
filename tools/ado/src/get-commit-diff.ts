@@ -1,11 +1,15 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
-import {adoFetch, repoBasePath} from './helpers/fetch.js';
-import type {
-  AdoBaseParams,
-  AdoCommitDetails,
-  AdoDiffResponse,
-} from './helpers/types.js';
+import {
+  GitVersionType,
+  type GitBaseVersionDescriptor,
+  type GitTargetVersionDescriptor,
+} from 'azure-devops-node-api/interfaces/GitInterfaces.js';
+import {
+  changeTypeToString,
+  createGitClient,
+  type AdoBaseParams,
+} from './helpers/client.js';
 
 export interface GetCommitDiffParams extends AdoBaseParams {
   commitId: string;
@@ -47,34 +51,14 @@ Returns: JSON object with change counts and list of changed files with their pat
   },
 };
 
-// Map ADO change type numbers to readable strings
-function changeTypeToString(changeType: number): string {
-  const types: Record<number, string> = {
-    1: 'add',
-    2: 'edit',
-    4: 'encoding',
-    8: 'rename',
-    16: 'delete',
-    32: 'undelete',
-    64: 'branch',
-    128: 'merge',
-    256: 'lock',
-    512: 'rollback',
-    1024: 'sourceRename',
-    2048: 'targetRename',
-    4096: 'property',
-  };
-  return types[changeType] ?? `unknown(${changeType})`;
-}
-
 export const handler: ToolFunction<GetCommitDiffParams> = async (args) => {
-  const basePath = repoBasePath(args.project, args.repository);
+  const gitApi = await createGitClient(args.organization, args.token);
 
   // First get the commit to find its parent
-  const commit = await adoFetch<AdoCommitDetails>(
-    args.organization,
-    `${basePath}/commits/${args.commitId}`,
-    args.token,
+  const commit = await gitApi.getCommit(
+    args.commitId,
+    args.repository,
+    args.project,
   );
 
   const parentId = commit.parents?.[0];
@@ -89,19 +73,30 @@ export const handler: ToolFunction<GetCommitDiffParams> = async (args) => {
   }
 
   // Get diff between parent and this commit
-  const diff = await adoFetch<AdoDiffResponse>(
-    args.organization,
-    `${basePath}/diffs/commits`,
-    args.token,
-    {
-      baseVersion: parentId,
-      targetVersion: args.commitId,
-    },
+  const baseVersion: GitBaseVersionDescriptor = {
+    version: parentId,
+    versionType: GitVersionType.Commit,
+  };
+  const targetVersion: GitTargetVersionDescriptor = {
+    version: args.commitId,
+    versionType: GitVersionType.Commit,
+  };
+
+  const diff = await gitApi.getCommitDiffs(
+    args.repository,
+    args.project,
+    true, // diffCommonCommit
+    undefined, // top
+    undefined, // skip
+    baseVersion,
+    targetVersion,
   );
 
-  const changes = diff.changes.map((change) => ({
-    path: change.item.path,
-    changeType: changeTypeToString(change.changeType),
+  const changes = (diff.changes ?? []).map((change) => ({
+    path: change.item?.path,
+    changeType: change.changeType
+      ? changeTypeToString(change.changeType)
+      : 'unknown',
   }));
 
   return JSON.stringify({

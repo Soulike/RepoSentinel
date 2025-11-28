@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@ai/openai-session": "workspace:*",
-    "@helpers/binary-utils": "workspace:*"
+    "@helpers/binary-utils": "workspace:*",
+    "azure-devops-node-api": "^15.1.1"
   },
   "peerDependencies": {
     "openai": "^6.0.0"

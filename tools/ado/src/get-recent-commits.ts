@@ -1,7 +1,7 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
-import {adoFetch, repoBasePath} from './helpers/fetch.js';
-import type {AdoBaseParams, AdoCommitsResponse} from './helpers/types.js';
+import type {GitQueryCommitsCriteria} from 'azure-devops-node-api/interfaces/GitInterfaces.js';
+import {createGitClient, type AdoBaseParams} from './helpers/client.js';
 
 export interface GetRecentCommitsParams extends AdoBaseParams {
   branch: string;
@@ -61,35 +61,33 @@ Returns: JSON array of commit objects with hash, author, date, and message.`,
 };
 
 export const handler: ToolFunction<GetRecentCommitsParams> = async (args) => {
-  const since = new Date(
-    Date.now() - args.hours * 60 * 60 * 1000,
-  ).toISOString();
+  const gitApi = await createGitClient(args.organization, args.token);
 
-  const basePath = repoBasePath(args.project, args.repository);
-  const params: Record<string, string> = {
-    'searchCriteria.itemVersion.version': args.branch,
-    'searchCriteria.fromDate': since,
-    $top: '100',
+  const since = new Date(Date.now() - args.hours * 60 * 60 * 1000);
+
+  const searchCriteria: GitQueryCommitsCriteria = {
+    itemVersion: {version: args.branch},
+    fromDate: since.toISOString(),
+    $top: 100,
   };
 
   if (args.path) {
-    params['searchCriteria.itemPath'] = args.path;
+    searchCriteria.itemPath = args.path;
   }
 
-  const data = await adoFetch<AdoCommitsResponse>(
-    args.organization,
-    `${basePath}/commits`,
-    args.token,
-    params,
+  const commits = await gitApi.getCommits(
+    args.repository,
+    searchCriteria,
+    args.project,
   );
 
-  const commits = data.value.map((commit) => ({
+  const result = commits.map((commit) => ({
     hash: commit.commitId,
-    shortHash: commit.commitId.slice(0, 7),
-    author: commit.author.name,
-    date: commit.author.date,
-    message: commit.comment.split('\n')[0] ?? '',
+    shortHash: commit.commitId?.slice(0, 7),
+    author: commit.author?.name,
+    date: commit.author?.date,
+    message: commit.comment?.split('\n')[0] ?? '',
   }));
 
-  return JSON.stringify(commits);
+  return JSON.stringify(result);
 };

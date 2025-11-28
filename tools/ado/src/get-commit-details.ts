@@ -1,7 +1,10 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
-import {adoFetch, repoBasePath} from './helpers/fetch.js';
-import type {AdoBaseParams, AdoCommitDetails} from './helpers/types.js';
+import {
+  changeTypeToString,
+  createGitClient,
+  type AdoBaseParams,
+} from './helpers/client.js';
 
 export interface GetCommitDetailsParams extends AdoBaseParams {
   commitId: string;
@@ -44,26 +47,34 @@ Returns: JSON object with commit details and files array showing paths and chang
 };
 
 export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
-  const basePath = repoBasePath(args.project, args.repository);
+  const gitApi = await createGitClient(args.organization, args.token);
 
-  const data = await adoFetch<AdoCommitDetails>(
-    args.organization,
-    `${basePath}/commits/${args.commitId}`,
-    args.token,
-    {changeCount: '1000'},
+  const commit = await gitApi.getCommit(
+    args.commitId,
+    args.repository,
+    args.project,
+    1000, // changeCount
   );
 
-  const files = (data.changes ?? []).map((change) => ({
-    path: change.item.path,
-    status: change.changeType,
+  const changes = await gitApi.getChanges(
+    args.commitId,
+    args.repository,
+    args.project,
+  );
+
+  const files = (changes.changes ?? []).map((change) => ({
+    path: change.item?.path,
+    status: change.changeType
+      ? changeTypeToString(change.changeType)
+      : 'unknown',
   }));
 
   return JSON.stringify({
-    hash: data.commitId,
-    author: data.author.name,
-    date: data.author.date,
-    message: data.comment,
-    parents: data.parents ?? [],
+    hash: commit.commitId,
+    author: commit.author?.name,
+    date: commit.author?.date,
+    message: commit.comment,
+    parents: commit.parents ?? [],
     files,
   });
 };

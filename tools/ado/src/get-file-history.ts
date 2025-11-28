@@ -1,7 +1,7 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
-import {adoFetch, repoBasePath} from './helpers/fetch.js';
-import type {AdoBaseParams, AdoCommitsResponse} from './helpers/types.js';
+import type {GitQueryCommitsCriteria} from 'azure-devops-node-api/interfaces/GitInterfaces.js';
+import {createGitClient, type AdoBaseParams} from './helpers/client.js';
 
 export interface GetFileHistoryParams extends AdoBaseParams {
   filePath: string;
@@ -49,26 +49,27 @@ Returns: JSON array of commits that modified the specified file.`,
 };
 
 export const handler: ToolFunction<GetFileHistoryParams> = async (args) => {
-  const basePath = repoBasePath(args.project, args.repository);
+  const gitApi = await createGitClient(args.organization, args.token);
   const limit = args.limit ?? 20;
 
-  const data = await adoFetch<AdoCommitsResponse>(
-    args.organization,
-    `${basePath}/commits`,
-    args.token,
-    {
-      'searchCriteria.itemPath': args.filePath,
-      $top: String(limit),
-    },
+  const searchCriteria: GitQueryCommitsCriteria = {
+    itemPath: args.filePath,
+    $top: limit,
+  };
+
+  const commits = await gitApi.getCommits(
+    args.repository,
+    searchCriteria,
+    args.project,
   );
 
-  const commits = data.value.map((commit) => ({
+  const result = commits.map((commit) => ({
     hash: commit.commitId,
-    shortHash: commit.commitId.slice(0, 7),
-    author: commit.author.name,
-    date: commit.author.date,
-    message: commit.comment.split('\n')[0] ?? '',
+    shortHash: commit.commitId?.slice(0, 7),
+    author: commit.author?.name,
+    date: commit.author?.date,
+    message: commit.comment?.split('\n')[0] ?? '',
   }));
 
-  return JSON.stringify(commits);
+  return JSON.stringify(result);
 };

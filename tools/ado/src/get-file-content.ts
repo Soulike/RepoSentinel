@@ -1,8 +1,8 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
 import {isBinaryBase64} from '@helpers/binary-utils';
-import {adoFetchRaw, repoBasePath} from './helpers/fetch.js';
-import type {AdoBaseParams} from './helpers/types.js';
+import {GitVersionType} from 'azure-devops-node-api/interfaces/GitInterfaces.js';
+import {createGitClient, type AdoBaseParams} from './helpers/client.js';
 
 export interface GetFileContentParams extends AdoBaseParams {
   filePath: string;
@@ -51,23 +51,31 @@ Returns: The file content as a string. Returns an error JSON for binary files.`,
 };
 
 export const handler: ToolFunction<GetFileContentParams> = async (args) => {
-  const basePath = repoBasePath(args.project, args.repository);
+  const gitApi = await createGitClient(args.organization, args.token);
 
-  const params: Record<string, string> = {
-    path: args.filePath,
-  };
+  const versionDescriptor = args.ref
+    ? {version: args.ref, versionType: GitVersionType.Commit}
+    : undefined;
 
-  if (args.ref) {
-    params['versionDescriptor.version'] = args.ref;
-    params['versionDescriptor.versionType'] = 'commit';
-  }
-
-  const content = await adoFetchRaw(
-    args.organization,
-    `${basePath}/items`,
-    args.token,
-    params,
+  const contentStream = await gitApi.getItemText(
+    args.repository,
+    args.filePath,
+    args.project,
+    undefined, // scopePath
+    undefined, // recursionLevel
+    undefined, // includeContentMetadata
+    undefined, // latestProcessedChange
+    undefined, // download
+    versionDescriptor,
+    true, // includeContent
   );
+
+  // Read stream to string
+  const chunks: Buffer[] = [];
+  for await (const chunk of contentStream) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const content = Buffer.concat(chunks).toString('utf-8');
 
   // Check if content appears to be binary (contains null bytes or non-text chars)
   const base64Content = Buffer.from(content).toString('base64');

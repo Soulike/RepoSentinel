@@ -1,7 +1,6 @@
 import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
 import type {ToolFunction} from '@ai/openai-session';
-import {adoFetch, repoBasePath} from './helpers/fetch.js';
-import type {AdoBaseParams, AdoRepository} from './helpers/types.js';
+import {createGitClient, type AdoBaseParams} from './helpers/client.js';
 
 export type GetRepoInfoParams = AdoBaseParams;
 
@@ -38,20 +37,15 @@ Returns: JSON object with repository details from Azure DevOps API.`,
 };
 
 export const handler: ToolFunction<GetRepoInfoParams> = async (args) => {
-  const path = repoBasePath(args.project, args.repository);
-
-  const data = await adoFetch<AdoRepository>(
-    args.organization,
-    path,
-    args.token,
-  );
+  const gitApi = await createGitClient(args.organization, args.token);
+  const repo = await gitApi.getRepository(args.repository, args.project);
 
   return JSON.stringify({
-    id: data.id,
-    name: data.name,
-    defaultBranch: data.defaultBranch?.replace('refs/heads/', '') ?? 'main',
-    project: data.project.name,
-    size: data.size,
-    webUrl: data.webUrl,
+    id: repo.id,
+    name: repo.name,
+    defaultBranch: repo.defaultBranch,
+    project: repo.project?.name,
+    size: repo.size,
+    webUrl: repo.webUrl,
   });
 };
