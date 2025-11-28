@@ -1,4 +1,4 @@
-export type RepoProvider = 'local' | 'github' | 'gerrit';
+export type RepoProvider = 'local' | 'github' | 'gerrit' | 'ado';
 
 interface BaseConfig {
   provider: RepoProvider;
@@ -26,4 +26,12 @@ export interface GerritConfig extends BaseConfig {
   project: string;
 }
 
-export type Config = LocalConfig | GitHubConfig | GerritConfig;
+export interface AdoConfig extends BaseConfig {
+  provider: 'ado';
+  organization: string;
+  project: string;
+  repository: string;
+  token: string | null;
+}
+
+export type Config = LocalConfig | GitHubConfig | GerritConfig | AdoConfig;

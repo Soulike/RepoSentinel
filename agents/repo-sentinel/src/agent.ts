@@ -2,6 +2,8 @@ import {Session, ToolRegistry, createOpenAIClient} from '@ai/openai-session';
 import type {ToolResult, ToolFunction} from '@ai/openai-session';
 import type {Logger} from '@helpers/logger';
 import {authenticateWithDeviceFlow} from '@helpers/github-auth';
+import {getAdoAccessToken} from '@helpers/ado-auth';
+import * as adoTools from '@openai-tools/ado';
 import * as gerritTools from '@openai-tools/gerrit';
 import * as gitTools from '@openai-tools/git';
 import * as githubTools from '@openai-tools/github';
@@ -14,10 +16,12 @@ import {
   getRepoProvider,
   getCustomPrompt,
 } from './helpers/env-helpers.js';
+import {AdoTokenStore} from './stores/ado-token-store.js';
 import {GitHubTokenStore} from './stores/github-token-store.js';
 import type {RepoProvider} from './types.js';
 
 // Import agent-specific tools
+import * as getAdoToken from './tools/get-ado-token.js';
 import * as getConfig from './tools/get-config.js';
 import * as getGitHubToken from './tools/get-github-token.js';
 import * as listReports from './tools/list-reports.js';
@@ -43,6 +47,11 @@ function createToolRegistry(provider: RepoProvider): ToolRegistry {
     for (const tool of gerritTools.allTools) {
       registry.register(tool.definition, tool.handler as ToolFunction);
     }
+  } else if (provider === 'ado') {
+    registry.register(getAdoToken.definition, getAdoToken.handler);
+    for (const tool of adoTools.allTools) {
+      registry.register(tool.definition, tool.handler as ToolFunction);
+    }
   } else {
     for (const tool of gitTools.allTools) {
       registry.register(tool.definition, tool.handler as ToolFunction);
@@ -62,6 +71,16 @@ export async function runAgent(logger: Logger): Promise<void> {
       GitHubTokenStore.set(token);
     } catch (cause) {
       throw new Error('GitHub authentication failed', {cause});
+    }
+  }
+
+  // Authenticate with Azure DevOps if using ADO provider
+  if (provider === 'ado') {
+    try {
+      const token = await getAdoAccessToken();
+      AdoTokenStore.set(token);
+    } catch (cause) {
+      throw new Error('Azure DevOps authentication failed', {cause});
     }
   }
 

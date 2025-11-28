@@ -25,8 +25,15 @@ export function getOpenAIModel(): string {
 // Provider configuration
 export function getRepoProvider(): RepoProvider {
   const provider = process.env['REPO_PROVIDER'];
-  if (provider !== 'local' && provider !== 'github' && provider !== 'gerrit') {
-    throw new Error('REPO_PROVIDER must be "local", "github", or "gerrit"');
+  if (
+    provider !== 'local' &&
+    provider !== 'github' &&
+    provider !== 'gerrit' &&
+    provider !== 'ado'
+  ) {
+    throw new Error(
+      'REPO_PROVIDER must be "local", "github", "gerrit", or "ado"',
+    );
   }
   return provider;
 }
@@ -72,6 +79,31 @@ export function getGerritProject(): string {
     throw new Error('GERRIT_PROJECT environment variable is not set');
   }
   return project;
+}
+
+// ADO provider configuration
+export function getAdoOrganization(): string {
+  const org = process.env['ADO_ORGANIZATION'];
+  if (!org) {
+    throw new Error('ADO_ORGANIZATION environment variable is not set');
+  }
+  return org;
+}
+
+export function getAdoProject(): string {
+  const project = process.env['ADO_PROJECT'];
+  if (!project) {
+    throw new Error('ADO_PROJECT environment variable is not set');
+  }
+  return project;
+}
+
+export function getAdoRepository(): string {
+  const repo = process.env['ADO_REPOSITORY'];
+  if (!repo) {
+    throw new Error('ADO_REPOSITORY environment variable is not set');
+  }
+  return repo;
 }
 
 // Agent configuration

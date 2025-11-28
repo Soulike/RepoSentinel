@@ -8,12 +8,16 @@ import {
   getGitHubRepo,
   getGerritHost,
   getGerritProject,
+  getAdoOrganization,
+  getAdoProject,
+  getAdoRepository,
   getBranch,
   getCheckIntervalHours,
   getReportDir,
   getSubPath,
 } from '../helpers/env-helpers.js';
 import {GitHubTokenStore} from '../stores/github-token-store.js';
+import {AdoTokenStore} from '../stores/ado-token-store.js';
 
 export const definition: ChatCompletionFunctionTool = {
   type: 'function',
@@ -22,7 +26,7 @@ export const definition: ChatCompletionFunctionTool = {
     description: `Get the current RepoSentinel configuration.
 
 Returns: JSON object with:
-- provider: "local", "github", or "gerrit"
+- provider: "local", "github", "gerrit", or "ado"
 - branch: Branch name to monitor
 - checkIntervalHours: Number of hours to look back
 - reportDir: Directory to save reports
@@ -38,7 +42,13 @@ For github provider:
 
 For gerrit provider:
 - host: Gerrit host (use as host parameter for gerrit tools)
-- project: Project name (use as project parameter for gerrit tools)`,
+- project: Project name (use as project parameter for gerrit tools)
+
+For ado provider:
+- organization: Azure DevOps organization (use as organization parameter for ado tools)
+- project: Azure DevOps project (use as project parameter for ado tools)
+- repository: Repository name (use as repository parameter for ado tools)
+- token: Azure DevOps access token (use as token parameter for ado tools)`,
     parameters: {
       type: 'object',
       properties: {},
@@ -73,6 +83,15 @@ export const handler: ToolFunction<Record<string, never>> = async () => {
       provider: 'gerrit',
       host: getGerritHost(),
       project: getGerritProject(),
+    };
+  } else if (provider === 'ado') {
+    config = {
+      ...baseConfig,
+      provider: 'ado',
+      organization: getAdoOrganization(),
+      project: getAdoProject(),
+      repository: getAdoRepository(),
+      token: AdoTokenStore.get(),
     };
   } else {
     config = {
