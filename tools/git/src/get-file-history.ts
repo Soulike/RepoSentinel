@@ -1,5 +1,4 @@
-import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
-import type {ToolFunction} from '@ai/openai-session';
+import type {OpenAITool} from '@ai/openai-session';
 import {execGit} from './git-helpers.js';
 
 export interface FileHistoryCommit {
@@ -16,11 +15,12 @@ export interface GetFileHistoryParams {
   maxCount?: number;
 }
 
-export const definition: ChatCompletionFunctionTool = {
-  type: 'function',
-  function: {
-    name: 'get_file_history',
-    description: `Get the commit history for a specific file. Useful for understanding how a file has evolved over time.
+export const getFileHistory: OpenAITool<GetFileHistoryParams> = {
+  definition: {
+    type: 'function',
+    function: {
+      name: 'get_file_history',
+      description: `Get the commit history for a specific file. Useful for understanding how a file has evolved over time.
 
 Returns: JSON array of commit objects with:
 - hash: Full commit hash
@@ -28,57 +28,57 @@ Returns: JSON array of commit objects with:
 - author: Commit author name
 - date: ISO 8601 timestamp
 - message: Commit message subject line`,
-    parameters: {
-      type: 'object',
-      properties: {
-        repoPath: {
-          type: 'string',
-          description: 'Absolute path to the git repository.',
+      parameters: {
+        type: 'object',
+        properties: {
+          repoPath: {
+            type: 'string',
+            description: 'Absolute path to the git repository.',
+          },
+          filePath: {
+            type: 'string',
+            description: 'Path to the file relative to the repository root.',
+          },
+          maxCount: {
+            type: 'number',
+            description: 'Maximum number of commits to return. Defaults to 10.',
+          },
         },
-        filePath: {
-          type: 'string',
-          description: 'Path to the file relative to the repository root.',
-        },
-        maxCount: {
-          type: 'number',
-          description: 'Maximum number of commits to return. Defaults to 10.',
-        },
+        required: ['repoPath', 'filePath'],
       },
-      required: ['repoPath', 'filePath'],
     },
   },
-};
+  handler: async (args) => {
+    const {repoPath, filePath, maxCount = 10} = args;
 
-export const handler: ToolFunction<GetFileHistoryParams> = async (args) => {
-  const {repoPath, filePath, maxCount = 10} = args;
+    // Format: hash|shortHash|author|date|message
+    const format = '%H|%h|%an|%aI|%s';
 
-  // Format: hash|shortHash|author|date|message
-  const format = '%H|%h|%an|%aI|%s';
+    const output = await execGit(repoPath, [
+      'log',
+      `-n`,
+      `${maxCount}`,
+      `--pretty=format:${format}`,
+      '--follow',
+      '--',
+      filePath,
+    ]);
 
-  const output = await execGit(repoPath, [
-    'log',
-    `-n`,
-    `${maxCount}`,
-    `--pretty=format:${format}`,
-    '--follow',
-    '--',
-    filePath,
-  ]);
+    if (!output) {
+      return JSON.stringify([]);
+    }
 
-  if (!output) {
-    return JSON.stringify([]);
-  }
+    const commits: FileHistoryCommit[] = output.split('\n').map((line) => {
+      const [hash, shortHash, author, date, message] = line.split('|');
+      return {
+        hash: hash ?? '',
+        shortHash: shortHash ?? '',
+        author: author ?? '',
+        date: date ?? '',
+        message: message ?? '',
+      };
+    });
 
-  const commits: FileHistoryCommit[] = output.split('\n').map((line) => {
-    const [hash, shortHash, author, date, message] = line.split('|');
-    return {
-      hash: hash ?? '',
-      shortHash: shortHash ?? '',
-      author: author ?? '',
-      date: date ?? '',
-      message: message ?? '',
-    };
-  });
-
-  return JSON.stringify(commits);
+    return JSON.stringify(commits);
+  },
 };

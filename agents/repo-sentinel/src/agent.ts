@@ -1,12 +1,12 @@
 import {Session, ToolRegistry, createOpenAIClient} from '@ai/openai-session';
-import type {ToolResult, ToolFunction} from '@ai/openai-session';
+import type {ToolResult} from '@ai/openai-session';
 import type {Logger} from '@helpers/logger';
 import {authenticateWithDeviceFlow, validateToken} from '@helpers/github-auth';
 import {getAdoAccessToken} from '@helpers/ado-auth';
-import * as adoTools from '@openai-tools/ado';
-import * as gerritTools from '@openai-tools/gerrit';
-import * as gitTools from '@openai-tools/git';
-import * as githubTools from '@openai-tools/github';
+import {allTools as adoTools} from '@openai-tools/ado';
+import {allTools as gerritTools} from '@openai-tools/gerrit';
+import {allTools as gitTools} from '@openai-tools/git';
+import {allTools as githubTools} from '@openai-tools/github';
 import {createSystemPrompt} from './prompts/system-prompt.js';
 import {createUserPrompt} from './prompts/user-prompt.js';
 import {
@@ -21,41 +21,33 @@ import {GitHubTokenStore} from './stores/github-token-store.js';
 import type {RepoProvider} from './types.js';
 
 // Import agent-specific tools
-import * as getAdoToken from './tools/get-ado-token.js';
-import * as getConfig from './tools/get-config.js';
-import * as getGitHubToken from './tools/get-github-token.js';
-import * as listReports from './tools/list-reports.js';
-import * as readReport from './tools/read-report.js';
-import * as saveReport from './tools/save-report.js';
+import {getAdoToken} from './tools/get-ado-token.js';
+import {getConfig} from './tools/get-config.js';
+import {getGitHubToken} from './tools/get-github-token.js';
+import {listReports} from './tools/list-reports.js';
+import {readReport} from './tools/read-report.js';
+import {saveReport} from './tools/save-report.js';
 
 function createToolRegistry(provider: RepoProvider): ToolRegistry {
   const registry = new ToolRegistry();
 
   // Register agent-specific tools
-  registry.register(getConfig.definition, getConfig.handler);
-  registry.register(listReports.definition, listReports.handler);
-  registry.register(readReport.definition, readReport.handler);
-  registry.register(saveReport.definition, saveReport.handler);
+  registry.register(getConfig);
+  registry.register(listReports);
+  registry.register(readReport);
+  registry.register(saveReport);
 
   // Register provider-specific tools
   if (provider === 'github') {
-    registry.register(getGitHubToken.definition, getGitHubToken.handler);
-    for (const tool of githubTools.allTools) {
-      registry.register(tool.definition, tool.handler as ToolFunction);
-    }
+    registry.register(getGitHubToken);
+    registry.registerAll(githubTools);
   } else if (provider === 'gerrit') {
-    for (const tool of gerritTools.allTools) {
-      registry.register(tool.definition, tool.handler as ToolFunction);
-    }
+    registry.registerAll(gerritTools);
   } else if (provider === 'ado') {
-    registry.register(getAdoToken.definition, getAdoToken.handler);
-    for (const tool of adoTools.allTools) {
-      registry.register(tool.definition, tool.handler as ToolFunction);
-    }
+    registry.register(getAdoToken);
+    registry.registerAll(adoTools);
   } else {
-    for (const tool of gitTools.allTools) {
-      registry.register(tool.definition, tool.handler as ToolFunction);
-    }
+    registry.registerAll(gitTools);
   }
 
   return registry;

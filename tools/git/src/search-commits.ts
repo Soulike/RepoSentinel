@@ -1,5 +1,4 @@
-import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
-import type {ToolFunction} from '@ai/openai-session';
+import type {OpenAITool} from '@ai/openai-session';
 import {execGit} from './git-helpers.js';
 
 export interface SearchCommit {
@@ -18,11 +17,12 @@ export interface SearchCommitsParams {
   path?: string;
 }
 
-export const definition: ChatCompletionFunctionTool = {
-  type: 'function',
-  function: {
-    name: 'search_commits',
-    description: `Search for commits by message keyword within a time window. Useful for finding related changes.
+export const searchCommits: OpenAITool<SearchCommitsParams> = {
+  definition: {
+    type: 'function',
+    function: {
+      name: 'search_commits',
+      description: `Search for commits by message keyword within a time window. Useful for finding related changes.
 
 Returns: JSON array of commit objects with:
 - hash: Full commit hash
@@ -30,72 +30,72 @@ Returns: JSON array of commit objects with:
 - author: Commit author name
 - date: ISO 8601 timestamp
 - message: Commit message subject line`,
-    parameters: {
-      type: 'object',
-      properties: {
-        repoPath: {
-          type: 'string',
-          description: 'Absolute path to the git repository.',
+      parameters: {
+        type: 'object',
+        properties: {
+          repoPath: {
+            type: 'string',
+            description: 'Absolute path to the git repository.',
+          },
+          query: {
+            type: 'string',
+            description: 'Keyword or phrase to search for in commit messages.',
+          },
+          branch: {
+            type: 'string',
+            description: 'Branch name to search commits in.',
+          },
+          hours: {
+            type: 'number',
+            description: 'Number of hours to look back.',
+          },
+          path: {
+            type: 'string',
+            description:
+              'Optional path to filter. Only commits affecting this path will be searched.',
+          },
         },
-        query: {
-          type: 'string',
-          description: 'Keyword or phrase to search for in commit messages.',
-        },
-        branch: {
-          type: 'string',
-          description: 'Branch name to search commits in.',
-        },
-        hours: {
-          type: 'number',
-          description: 'Number of hours to look back.',
-        },
-        path: {
-          type: 'string',
-          description:
-            'Optional path to filter. Only commits affecting this path will be searched.',
-        },
+        required: ['repoPath', 'query', 'branch', 'hours'],
       },
-      required: ['repoPath', 'query', 'branch', 'hours'],
     },
   },
-};
+  handler: async (args) => {
+    const {repoPath, query, branch, hours, path} = args;
+    const since = `${hours} hours ago`;
 
-export const handler: ToolFunction<SearchCommitsParams> = async (args) => {
-  const {repoPath, query, branch, hours, path} = args;
-  const since = `${hours} hours ago`;
+    // Format: hash|shortHash|author|date|message
+    const format = '%H|%h|%an|%aI|%s';
 
-  // Format: hash|shortHash|author|date|message
-  const format = '%H|%h|%an|%aI|%s';
+    const gitArgs = [
+      'log',
+      branch,
+      `--since="${since}"`,
+      `--grep=${query}`,
+      '--regexp-ignore-case',
+      `--pretty=format:${format}`,
+    ];
 
-  const gitArgs = [
-    'log',
-    branch,
-    `--since="${since}"`,
-    `--grep=${query}`,
-    '--regexp-ignore-case',
-    `--pretty=format:${format}`,
-  ];
+    if (path) {
+      gitArgs.push('--', path);
+    }
 
-  if (path) {
-    gitArgs.push('--', path);
-  }
+    const output = await execGit(repoPath, gitArgs);
 
-  const output = await execGit(repoPath, gitArgs);
+    if (!output) {
+      return JSON.stringify([]);
+    }
 
-  if (!output) {
-    return JSON.stringify([]);
-  }
+    const commits: SearchCommit[] = output.split('\n').map((line) => {
+      const [hash, shortHash, author, date, message] = line.split('|');
+      return {
+        hash: hash ?? '',
+        shortHash: shortHash ?? '',
+        author: author ?? '',
+        date: date ?? '',
+        message: message ?? '',
+      };
+    });
 
-  const commits: SearchCommit[] = output.split('\n').map((line) => {
-    const [hash, shortHash, author, date, message] = line.split('|');
-    return {
-      hash: hash ?? '',
-      shortHash: shortHash ?? '',
-      author: author ?? '',
-      date: date ?? '',
-      message: message ?? '',
-    };
-  });
-
-  return JSON.stringify(commits);
+    return JSON.stringify(commits);
+  },
 };

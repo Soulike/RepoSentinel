@@ -1,5 +1,4 @@
-import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
-import type {ToolFunction} from '@ai/openai-session';
+import type {OpenAITool} from '@ai/openai-session';
 import {execGit} from './git-helpers.js';
 
 export interface ChangedFile {
@@ -23,11 +22,19 @@ export interface GetCommitDetailsParams {
   path?: string;
 }
 
-export const definition: ChatCompletionFunctionTool = {
-  type: 'function',
-  function: {
-    name: 'get_commit_details',
-    description: `Get detailed information about a specific commit including the list of changed files with their status and line changes.
+const STATUS_MAP: Record<string, ChangedFile['status']> = {
+  A: 'added',
+  M: 'modified',
+  D: 'deleted',
+  R: 'renamed',
+};
+
+export const getCommitDetails: OpenAITool<GetCommitDetailsParams> = {
+  definition: {
+    type: 'function',
+    function: {
+      name: 'get_commit_details',
+      description: `Get detailed information about a specific commit including the list of changed files with their status and line changes.
 
 Returns: JSON object with:
 - hash: Full commit hash
@@ -39,113 +46,111 @@ Returns: JSON object with:
   - status: One of "added", "modified", "deleted", "renamed"
   - additions: Number of lines added
   - deletions: Number of lines removed`,
-    parameters: {
-      type: 'object',
-      properties: {
-        repoPath: {
-          type: 'string',
-          description: 'Absolute path to the git repository.',
+      parameters: {
+        type: 'object',
+        properties: {
+          repoPath: {
+            type: 'string',
+            description: 'Absolute path to the git repository.',
+          },
+          commitHash: {
+            type: 'string',
+            description: 'The commit hash to inspect (full or short hash).',
+          },
+          path: {
+            type: 'string',
+            description:
+              'Optional path to filter. Only files under this path will be included in the result.',
+          },
         },
-        commitHash: {
-          type: 'string',
-          description: 'The commit hash to inspect (full or short hash).',
-        },
-        path: {
-          type: 'string',
-          description:
-            'Optional path to filter. Only files under this path will be included in the result.',
-        },
+        required: ['repoPath', 'commitHash'],
       },
-      required: ['repoPath', 'commitHash'],
     },
   },
-};
+  handler: async (args) => {
+    const {repoPath, commitHash, path} = args;
 
-const STATUS_MAP: Record<string, ChangedFile['status']> = {
-  A: 'added',
-  M: 'modified',
-  D: 'deleted',
-  R: 'renamed',
-};
+    // Get commit metadata
+    const format = '%H|%an|%aI|%B';
+    const metaOutput = await execGit(repoPath, [
+      'show',
+      commitHash,
+      '--no-patch',
+      `--pretty=format:${format}`,
+    ]);
 
-export const handler: ToolFunction<GetCommitDetailsParams> = async (args) => {
-  const {repoPath, commitHash, path} = args;
+    const [hash, author, date, ...messageParts] = metaOutput.split('|');
+    const message = messageParts.join('|').trim();
 
-  // Get commit metadata
-  const format = '%H|%an|%aI|%B';
-  const metaOutput = await execGit(repoPath, [
-    'show',
-    commitHash,
-    '--no-patch',
-    `--pretty=format:${format}`,
-  ]);
+    // Get file changes with stats
+    const statsArgs = ['show', commitHash, '--numstat', '--pretty=format:'];
+    if (path) {
+      statsArgs.push('--', path);
+    }
+    const statsOutput = await execGit(repoPath, statsArgs);
 
-  const [hash, author, date, ...messageParts] = metaOutput.split('|');
-  const message = messageParts.join('|').trim();
+    // Get file statuses
+    const statusArgs = [
+      'show',
+      commitHash,
+      '--name-status',
+      '--pretty=format:',
+    ];
+    if (path) {
+      statusArgs.push('--', path);
+    }
+    const statusOutput = await execGit(repoPath, statusArgs);
 
-  // Get file changes with stats
-  const statsArgs = ['show', commitHash, '--numstat', '--pretty=format:'];
-  if (path) {
-    statsArgs.push('--', path);
-  }
-  const statsOutput = await execGit(repoPath, statsArgs);
+    const statusLines = statusOutput
+      .split('\n')
+      .filter((line) => line.trim() !== '');
+    const statsLines = statsOutput
+      .split('\n')
+      .filter((line) => line.trim() !== '');
 
-  // Get file statuses
-  const statusArgs = ['show', commitHash, '--name-status', '--pretty=format:'];
-  if (path) {
-    statusArgs.push('--', path);
-  }
-  const statusOutput = await execGit(repoPath, statusArgs);
+    const files: ChangedFile[] = [];
 
-  const statusLines = statusOutput
-    .split('\n')
-    .filter((line) => line.trim() !== '');
-  const statsLines = statsOutput
-    .split('\n')
-    .filter((line) => line.trim() !== '');
+    for (let i = 0; i < statusLines.length; i++) {
+      const statusLine = statusLines[i];
+      const statsLine = statsLines[i];
 
-  const files: ChangedFile[] = [];
+      if (!statusLine) continue;
 
-  for (let i = 0; i < statusLines.length; i++) {
-    const statusLine = statusLines[i];
-    const statsLine = statsLines[i];
+      const statusMatch = statusLine.match(/^([AMDRT])\d*\t(.+?)(?:\t(.+))?$/);
+      if (!statusMatch) continue;
 
-    if (!statusLine) continue;
+      const [, statusCode, filePath] = statusMatch;
+      const status = STATUS_MAP[statusCode?.charAt(0) ?? 'M'] ?? 'modified';
 
-    const statusMatch = statusLine.match(/^([AMDRT])\d*\t(.+?)(?:\t(.+))?$/);
-    if (!statusMatch) continue;
+      let additions = 0;
+      let deletions = 0;
 
-    const [, statusCode, filePath] = statusMatch;
-    const status = STATUS_MAP[statusCode?.charAt(0) ?? 'M'] ?? 'modified';
-
-    let additions = 0;
-    let deletions = 0;
-
-    if (statsLine) {
-      const statsMatch = statsLine.match(/^(\d+|-)\t(\d+|-)\t/);
-      if (statsMatch) {
-        additions =
-          statsMatch[1] === '-' ? 0 : parseInt(statsMatch[1] ?? '0', 10);
-        deletions =
-          statsMatch[2] === '-' ? 0 : parseInt(statsMatch[2] ?? '0', 10);
+      if (statsLine) {
+        const statsMatch = statsLine.match(/^(\d+|-)\t(\d+|-)\t/);
+        if (statsMatch) {
+          additions =
+            statsMatch[1] === '-' ? 0 : parseInt(statsMatch[1] ?? '0', 10);
+          deletions =
+            statsMatch[2] === '-' ? 0 : parseInt(statsMatch[2] ?? '0', 10);
+        }
       }
+
+      files.push({
+        path: filePath ?? '',
+        status,
+        additions,
+        deletions,
+      });
     }
 
-    files.push({
-      path: filePath ?? '',
-      status,
-      additions,
-      deletions,
-    });
-  }
+    const result: CommitDetails = {
+      hash: hash ?? '',
+      author: author ?? '',
+      date: date ?? '',
+      message,
+      files,
+    };
 
-  const result: CommitDetails = {
-    hash: hash ?? '',
-    author: author ?? '',
-    date: date ?? '',
-    message,
-    files,
-  };
-
-  return JSON.stringify(result);
+    return JSON.stringify(result);
+  },
 };

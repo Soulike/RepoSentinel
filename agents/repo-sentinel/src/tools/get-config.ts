@@ -1,5 +1,4 @@
-import type {ChatCompletionFunctionTool} from 'openai/resources/chat/completions';
-import type {ToolFunction} from '@ai/openai-session';
+import type {OpenAITool} from '@ai/openai-session';
 import type {Config} from '../types.js';
 import {
   getRepoProvider,
@@ -19,11 +18,12 @@ import {
 import {GitHubTokenStore} from '../stores/github-token-store.js';
 import {AdoTokenStore} from '../stores/ado-token-store.js';
 
-export const definition: ChatCompletionFunctionTool = {
-  type: 'function',
-  function: {
-    name: 'get_config',
-    description: `Get the current RepoSentinel configuration.
+export const getConfig: OpenAITool<Record<string, never>> = {
+  definition: {
+    type: 'function',
+    function: {
+      name: 'get_config',
+      description: `Get the current RepoSentinel configuration.
 
 Returns: JSON object with:
 - provider: "local", "github", "gerrit", or "ado"
@@ -49,57 +49,57 @@ For ado provider:
 - project: Azure DevOps project (use as project parameter for ado tools)
 - repository: Repository name (use as repository parameter for ado tools)
 - token: Azure DevOps access token (use as token parameter for ado tools)`,
-    parameters: {
-      type: 'object',
-      properties: {},
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
     },
   },
-};
+  handler: async () => {
+    const provider = getRepoProvider();
 
-export const handler: ToolFunction<Record<string, never>> = async () => {
-  const provider = getRepoProvider();
-
-  const baseConfig = {
-    provider,
-    branch: getBranch(),
-    checkIntervalHours: getCheckIntervalHours(),
-    reportDir: getReportDir(),
-    subPaths: getSubPath(),
-  };
-
-  let config: Config;
-
-  if (provider === 'github') {
-    config = {
-      ...baseConfig,
-      provider: 'github',
-      owner: getGitHubOwner(),
-      repo: getGitHubRepo(),
-      token: GitHubTokenStore.get(),
+    const baseConfig = {
+      provider,
+      branch: getBranch(),
+      checkIntervalHours: getCheckIntervalHours(),
+      reportDir: getReportDir(),
+      subPaths: getSubPath(),
     };
-  } else if (provider === 'gerrit') {
-    config = {
-      ...baseConfig,
-      provider: 'gerrit',
-      host: getGerritHost(),
-      project: getGerritProject(),
-    };
-  } else if (provider === 'ado') {
-    config = {
-      ...baseConfig,
-      provider: 'ado',
-      organization: getAdoOrganization(),
-      project: getAdoProject(),
-      repository: getAdoRepository(),
-      token: AdoTokenStore.get(),
-    };
-  } else {
-    config = {
-      ...baseConfig,
-      provider: 'local',
-      repoPath: getRepoPath(),
-    };
-  }
 
-  return JSON.stringify(config);
+    let config: Config;
+
+    if (provider === 'github') {
+      config = {
+        ...baseConfig,
+        provider: 'github',
+        owner: getGitHubOwner(),
+        repo: getGitHubRepo(),
+        token: GitHubTokenStore.get(),
+      };
+    } else if (provider === 'gerrit') {
+      config = {
+        ...baseConfig,
+        provider: 'gerrit',
+        host: getGerritHost(),
+        project: getGerritProject(),
+      };
+    } else if (provider === 'ado') {
+      config = {
+        ...baseConfig,
+        provider: 'ado',
+        organization: getAdoOrganization(),
+        project: getAdoProject(),
+        repository: getAdoRepository(),
+        token: AdoTokenStore.get(),
+      };
+    } else {
+      config = {
+        ...baseConfig,
+        provider: 'local',
+        repoPath: getRepoPath(),
+      };
+    }
+
+    return JSON.stringify(config);
+  },
 };

@@ -1,14 +1,14 @@
 // GitHub helper utilities
 export {createOctokit, type GitHubBaseParams} from './github-helpers.js';
 
-// Individual tools - definitions and handlers
-export * as getRepoStatus from './get-repo-status.js';
-export * as getRecentCommits from './get-recent-commits.js';
-export * as getCommitDetails from './get-commit-details.js';
-export * as getCommitDiff from './get-commit-diff.js';
-export * as getFileContent from './get-file-content.js';
-export * as getFileHistory from './get-file-history.js';
-export * as compareCommits from './compare-commits.js';
+// Individual tools - named exports
+export {getRepoStatus} from './get-repo-status.js';
+export {getRecentCommits} from './get-recent-commits.js';
+export {getCommitDetails} from './get-commit-details.js';
+export {getCommitDiff} from './get-commit-diff.js';
+export {getFileContent} from './get-file-content.js';
+export {getFileHistory} from './get-file-history.js';
+export {compareCommits} from './compare-commits.js';
 
 // Re-export param types
 export type {GetRepoStatusParams} from './get-repo-status.js';
@@ -20,13 +20,13 @@ export type {GetFileHistoryParams} from './get-file-history.js';
 export type {CompareCommitsParams} from './compare-commits.js';
 
 // Convenience: Import all tools for bulk registration
-import * as getRepoStatus from './get-repo-status.js';
-import * as getRecentCommits from './get-recent-commits.js';
-import * as getCommitDetails from './get-commit-details.js';
-import * as getCommitDiff from './get-commit-diff.js';
-import * as getFileContent from './get-file-content.js';
-import * as getFileHistory from './get-file-history.js';
-import * as compareCommits from './compare-commits.js';
+import {getRepoStatus} from './get-repo-status.js';
+import {getRecentCommits} from './get-recent-commits.js';
+import {getCommitDetails} from './get-commit-details.js';
+import {getCommitDiff} from './get-commit-diff.js';
+import {getFileContent} from './get-file-content.js';
+import {getFileHistory} from './get-file-history.js';
+import {compareCommits} from './compare-commits.js';
 
 /**
  * Array of all GitHub tools for bulk registration with ToolRegistry.
@@ -37,9 +37,7 @@ import * as compareCommits from './compare-commits.js';
  * import { ToolRegistry } from '@ai/openai-session';
  *
  * const registry = new ToolRegistry();
- * for (const tool of allTools) {
- *   registry.register(tool.definition, tool.handler);
- * }
+ * registry.registerAll(allTools);
  * ```
  */
 export const allTools = [
@@ -50,4 +48,4 @@ export const allTools = [
   getFileContent,
   getFileHistory,
   compareCommits,
-] as const;
+];
