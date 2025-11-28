@@ -1,4 +1,5 @@
 import {DefaultAzureCredential} from '@azure/identity';
+import type {AccessToken} from '@azure/identity';
 
 const ADO_SCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default';
 
@@ -12,10 +13,10 @@ const ADO_SCOPE = '499b84ac-1321-427f-aa17-267ca6975798/.default';
  * 4. Visual Studio Code Azure extension
  * 5. Interactive browser (fallback)
  *
- * @returns Access token string for Azure DevOps API
+ * @returns Access token object with token string and expiration timestamps
  * @throws Error if no credential method succeeds
  */
-export async function getAdoAccessToken(): Promise<string> {
+export async function getAdoAccessToken(): Promise<AccessToken> {
   console.log('\nAzure DevOps authentication required.');
   console.log('Attempting to acquire token via DefaultAzureCredential...');
 
@@ -26,5 +27,5 @@ export async function getAdoAccessToken(): Promise<string> {
   }
 
   console.log('✓ Authenticated successfully\n');
-  return token.token;
+  return token;
 }
