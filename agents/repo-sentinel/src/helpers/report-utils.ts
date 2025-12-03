@@ -11,30 +11,35 @@ export function generateReportFilename(
   topic: string,
   date: Date,
 ): string {
-  if (!project.trim()) {
-    throw new Error('project cannot be empty');
-  }
-  if (!branch.trim()) {
-    throw new Error('branch cannot be empty');
-  }
-  if (!topic.trim()) {
-    throw new Error('topic cannot be empty');
-  }
-
   // Use ISO format: 2025-12-03T14-30-00Z (remove milliseconds, replace colons with hyphens)
   const isoTimestamp = date
     .toISOString()
     .replace(/\.\d{3}Z$/, 'Z')
     .replace(/:/g, '-');
 
-  // Sanitize inputs: lowercase, replace spaces/special chars with hyphens
+  // Sanitize inputs: lowercase, replace spaces/special chars with hyphens, trim leading/trailing hyphens
   const sanitize = (s: string) =>
     s
       .toLowerCase()
       .replace(/[^a-z0-9-]/g, '-')
-      .replace(/-+/g, '-');
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
 
-  return `${isoTimestamp}-${sanitize(project)}-${sanitize(branch)}-${sanitize(topic)}.md`;
+  const sanitizedProject = sanitize(project);
+  const sanitizedBranch = sanitize(branch);
+  const sanitizedTopic = sanitize(topic);
+
+  if (!sanitizedProject) {
+    throw new Error('project cannot be empty after sanitization');
+  }
+  if (!sanitizedBranch) {
+    throw new Error('branch cannot be empty after sanitization');
+  }
+  if (!sanitizedTopic) {
+    throw new Error('topic cannot be empty after sanitization');
+  }
+
+  return `${isoTimestamp}-${sanitizedProject}-${sanitizedBranch}-${sanitizedTopic}.md`;
 }
 
 /**
