@@ -15,7 +15,7 @@ import {
   getReportDir,
   getSubPath,
 } from '../helpers/env-helpers.js';
-import {calculateFetchHours} from '../helpers/fetch-timestamp.js';
+import {calculateFetchHours} from '../helpers/fetch-hours.js';
 import {GitHubTokenStore} from '../stores/github-token-store.js';
 import {AdoTokenStore} from '../stores/ado-token-store.js';
 

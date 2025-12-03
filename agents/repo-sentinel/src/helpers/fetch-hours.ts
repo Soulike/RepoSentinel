@@ -18,6 +18,11 @@ export async function calculateFetchHours(
       if (timestamp) {
         const hoursSinceLastReport =
           (now.getTime() - timestamp.getTime()) / (60 * 60 * 1000);
+        if (hoursSinceLastReport <= 0) {
+          throw new Error(
+            `Report timestamp ${timestamp.toISOString()} is in the future or now`,
+          );
+        }
         // Cap at maxFetchHours
         return Math.min(Math.ceil(hoursSinceLastReport), maxFetchHours);
       }
