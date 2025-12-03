@@ -15,26 +15,26 @@ function getWorkflowSteps(provider: RepoProvider): string {
   if (provider === 'github') {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Check repository status
-3. Get recent commits for the configured branch and time window
+3. Get commits from the last \`fetchHours\` hours for the configured branch
 4. For each commit: get details, diff, classify, analyze vital commits
 5. Generate and save report using \`${TOOLS.saveReport}\``;
   } else if (provider === 'gerrit') {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Get project info to verify access
-3. Get recent changes (merged) for the configured branch and time window
+3. Get changes (merged) from the last \`fetchHours\` hours for the configured branch
 4. For each change: get details, diff, classify, analyze vital changes
 5. Generate and save report using \`${TOOLS.saveReport}\``;
   } else if (provider === 'ado') {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Get repository info to verify access
-3. Get recent commits for the configured branch and time window
+3. Get commits from the last \`fetchHours\` hours for the configured branch
 4. For each commit: get details, diff, classify, analyze vital commits
 5. Generate and save report using \`${TOOLS.saveReport}\``;
   } else {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Check repository status
 3. Fetch latest changes from remote
-4. Get recent commits for the configured branch and time window
+4. Get commits from the last \`fetchHours\` hours for the configured branch
 5. For each commit: get details, diff, classify, analyze vital commits
 6. Generate and save report using \`${TOOLS.saveReport}\``;
   }
@@ -128,15 +128,9 @@ Analyze in detail if:
 - Total Commits, Contributors, Files Changed, Lines Added/Removed
 \`\`\`
 
-**Filename format:** \`YYYY-MM-DD-HH-MM-<project>-<branch>[-<topic>].md\`
-- Include date and time (24-hour format)
-- Include project name and branch
-- If \`subPaths\` is set, add a short topic summarizing what those paths cover
-- Use lowercase and hyphens, no spaces
-
-Examples:
-- \`2025-11-28-14-30-chromium-src-main.md\`
-- \`2025-11-28-09-15-ai-apps-main-gerrit-tools.md\`
+When saving the report with \`${TOOLS.saveReport}\`:
+- \`project\`: Use the repository/project name from config
+- \`topic\`: A short description of the scope (e.g., "optimization-guide", "full-repo")
 
 ## Guidelines
 

@@ -11,10 +11,11 @@ import {
   getAdoProject,
   getAdoRepository,
   getBranch,
-  getCheckIntervalHours,
+  getMaxFetchHours,
   getReportDir,
   getSubPath,
 } from '../helpers/env-helpers.js';
+import {calculateFetchHours} from '../helpers/fetch-hours.js';
 import {GitHubTokenStore} from '../stores/github-token-store.js';
 import {AdoTokenStore} from '../stores/ado-token-store.js';
 
@@ -28,7 +29,7 @@ export const getConfig: OpenAITool<Record<string, never>> = {
 Returns: JSON object with:
 - provider: "local", "github", "gerrit", or "ado"
 - branch: Branch name to monitor
-- checkIntervalHours: Number of hours to look back
+- fetchHours: Number of hours to look back for commits
 - reportDir: Directory to save reports
 - subPaths: Array of sub-paths within repo to scope analysis
 
@@ -57,11 +58,13 @@ For ado provider:
   },
   handler: async () => {
     const provider = getRepoProvider();
+    const maxFetchHours = getMaxFetchHours();
+    const fetchHours = await calculateFetchHours(maxFetchHours);
 
     const baseConfig = {
       provider,
       branch: getBranch(),
-      checkIntervalHours: getCheckIntervalHours(),
+      fetchHours,
       reportDir: getReportDir(),
       subPaths: getSubPath(),
     };

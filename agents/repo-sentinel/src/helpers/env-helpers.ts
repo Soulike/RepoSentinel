@@ -121,7 +121,23 @@ export function getCheckIntervalHours(): number {
   if (!hours) {
     throw new Error('CHECK_INTERVAL_HOURS environment variable is not set');
   }
-  return parseInt(hours, 10);
+  const parsed = parseInt(hours, 10);
+  if (isNaN(parsed) || parsed <= 0) {
+    throw new Error('CHECK_INTERVAL_HOURS must be a positive number');
+  }
+  return parsed;
+}
+
+export function getMaxFetchHours(): number {
+  const hours = process.env['MAX_FETCH_HOURS'];
+  if (!hours) {
+    throw new Error('MAX_FETCH_HOURS environment variable is not set');
+  }
+  const parsed = parseInt(hours, 10);
+  if (isNaN(parsed) || parsed <= 0) {
+    throw new Error('MAX_FETCH_HOURS must be a positive number');
+  }
+  return parsed;
 }
 
 export function getReportDir(): string {
