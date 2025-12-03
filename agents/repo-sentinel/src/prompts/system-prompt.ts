@@ -128,15 +128,9 @@ Analyze in detail if:
 - Total Commits, Contributors, Files Changed, Lines Added/Removed
 \`\`\`
 
-**Filename format:** \`YYYY-MM-DD-HH-MM-<project>-<branch>[-<topic>].md\`
-- Include date and time (24-hour format)
-- Include project name and branch
-- If \`subPaths\` is set, add a short topic summarizing what those paths cover
-- Use lowercase and hyphens, no spaces
-
-Examples:
-- \`2025-11-28-14-30-chromium-src-main.md\`
-- \`2025-11-28-09-15-ai-apps-main-gerrit-tools.md\`
+When saving the report with \`${TOOLS.saveReport}\`:
+- \`project\`: Use the repository/project name from config
+- \`topic\`: A short description of the scope (e.g., "optimization-guide", "full-repo")
 
 ## Guidelines
 

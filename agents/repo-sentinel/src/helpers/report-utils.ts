@@ -2,27 +2,46 @@ import {readdir} from 'fs/promises';
 import {getReportDir} from './env-helpers.js';
 
 /**
+ * Generate a report filename with ISO timestamp prefix.
+ * Format: 2025-12-03T14-30-00Z-<project>-<branch>-<topic>.md
+ */
+export function generateReportFilename(
+  project: string,
+  branch: string,
+  topic: string,
+  date: Date,
+): string {
+  // Use ISO format: 2025-12-03T14-30-00Z (remove milliseconds, replace colons with hyphens)
+  const isoTimestamp = date
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
+    .replace(/:/g, '-');
+
+  // Sanitize inputs: lowercase, replace spaces/special chars with hyphens
+  const sanitize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-');
+
+  return `${isoTimestamp}-${sanitize(project)}-${sanitize(branch)}-${sanitize(topic)}.md`;
+}
+
+/**
  * Parse timestamp from report filename.
- * Expected format: YYYY-MM-DD-HH-MM-<rest>.md
+ * Expected format: 2025-12-03T14-30-00Z-<rest>.md
  * Returns null if parsing fails.
  */
 export function parseReportTimestamp(filename: string): Date | null {
-  const match = filename.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-/);
+  const match = filename.match(/^(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)-/);
   if (!match) return null;
 
-  const year = match[1]!;
-  const month = match[2]!;
-  const day = match[3]!;
-  const hour = match[4]!;
-  const minute = match[5]!;
-
-  const date = new Date(
-    parseInt(year, 10),
-    parseInt(month, 10) - 1, // months are 0-indexed
-    parseInt(day, 10),
-    parseInt(hour, 10),
-    parseInt(minute, 10),
+  // Convert back to ISO format: replace hyphens with colons in time part
+  const isoString = match[1]!.replace(
+    /T(\d{2})-(\d{2})-(\d{2})Z/,
+    'T$1:$2:$3Z',
   );
+  const date = new Date(isoString);
 
   return isNaN(date.getTime()) ? null : date;
 }
