@@ -3,8 +3,7 @@ export type RepoProvider = 'local' | 'github' | 'gerrit' | 'ado';
 interface BaseConfig {
   provider: RepoProvider;
   branch: string;
-  fetchSinceTimestamp: string;
-  maxFetchHours: number;
+  fetchHours: number;
   reportDir: string;
   subPaths: string[];
 }

@@ -15,26 +15,26 @@ function getWorkflowSteps(provider: RepoProvider): string {
   if (provider === 'github') {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Check repository status
-3. Get commits since \`fetchSinceTimestamp\` for the configured branch
+3. Get commits from the last \`fetchHours\` hours for the configured branch
 4. For each commit: get details, diff, classify, analyze vital commits
 5. Generate and save report using \`${TOOLS.saveReport}\``;
   } else if (provider === 'gerrit') {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Get project info to verify access
-3. Get changes (merged) since \`fetchSinceTimestamp\` for the configured branch
+3. Get changes (merged) from the last \`fetchHours\` hours for the configured branch
 4. For each change: get details, diff, classify, analyze vital changes
 5. Generate and save report using \`${TOOLS.saveReport}\``;
   } else if (provider === 'ado') {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Get repository info to verify access
-3. Get commits since \`fetchSinceTimestamp\` for the configured branch
+3. Get commits from the last \`fetchHours\` hours for the configured branch
 4. For each commit: get details, diff, classify, analyze vital commits
 5. Generate and save report using \`${TOOLS.saveReport}\``;
   } else {
     return `1. Call \`${TOOLS.getConfig}\` to get configuration
 2. Check repository status
 3. Fetch latest changes from remote
-4. Get commits since \`fetchSinceTimestamp\` for the configured branch
+4. Get commits from the last \`fetchHours\` hours for the configured branch
 5. For each commit: get details, diff, classify, analyze vital commits
 6. Generate and save report using \`${TOOLS.saveReport}\``;
   }

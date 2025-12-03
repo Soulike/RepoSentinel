@@ -15,7 +15,7 @@ import {
   getReportDir,
   getSubPath,
 } from '../helpers/env-helpers.js';
-import {calculateFetchSinceTimestamp} from '../helpers/fetch-timestamp.js';
+import {calculateFetchHours} from '../helpers/fetch-timestamp.js';
 import {GitHubTokenStore} from '../stores/github-token-store.js';
 import {AdoTokenStore} from '../stores/ado-token-store.js';
 
@@ -29,8 +29,7 @@ export const getConfig: OpenAITool<Record<string, never>> = {
 Returns: JSON object with:
 - provider: "local", "github", "gerrit", or "ado"
 - branch: Branch name to monitor
-- fetchSinceTimestamp: ISO timestamp to fetch commits from (derived from last report or maxFetchHours)
-- maxFetchHours: Maximum lookback window in hours
+- fetchHours: Number of hours to look back for commits
 - reportDir: Directory to save reports
 - subPaths: Array of sub-paths within repo to scope analysis
 
@@ -60,14 +59,12 @@ For ado provider:
   handler: async () => {
     const provider = getRepoProvider();
     const maxFetchHours = getMaxFetchHours();
-    const fetchSinceTimestamp =
-      await calculateFetchSinceTimestamp(maxFetchHours);
+    const fetchHours = await calculateFetchHours(maxFetchHours);
 
     const baseConfig = {
       provider,
       branch: getBranch(),
-      fetchSinceTimestamp,
-      maxFetchHours,
+      fetchHours,
       reportDir: getReportDir(),
       subPaths: getSubPath(),
     };

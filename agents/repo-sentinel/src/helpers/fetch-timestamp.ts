@@ -1,16 +1,13 @@
 import {getReportFilenames, parseReportTimestamp} from './report-utils.js';
 
 /**
- * Calculate the fetch start timestamp based on:
- * 1. Latest report filename timestamp (if available)
- * 2. Fall back to maxFetchHours ago
- * 3. Cap at maxFetchHours to prevent excessively long lookbacks
+ * Calculate how many hours back to fetch commits.
+ * Based on latest report timestamp, capped at maxFetchHours.
  */
-export async function calculateFetchSinceTimestamp(
+export async function calculateFetchHours(
   maxFetchHours: number,
-): Promise<string> {
+): Promise<number> {
   const now = new Date();
-  const maxLookback = new Date(now.getTime() - maxFetchHours * 60 * 60 * 1000);
 
   const reports = await getReportFilenames();
 
@@ -19,14 +16,14 @@ export async function calculateFetchSinceTimestamp(
     for (const filename of reports) {
       const timestamp = parseReportTimestamp(filename);
       if (timestamp) {
-        // Cap at maxFetchHours to prevent overwhelming fetches
-        return timestamp > maxLookback
-          ? timestamp.toISOString()
-          : maxLookback.toISOString();
+        const hoursSinceLastReport =
+          (now.getTime() - timestamp.getTime()) / (60 * 60 * 1000);
+        // Cap at maxFetchHours
+        return Math.min(Math.ceil(hoursSinceLastReport), maxFetchHours);
       }
     }
   }
 
   // No reports or no valid timestamps found, use maxFetchHours
-  return maxLookback.toISOString();
+  return maxFetchHours;
 }
