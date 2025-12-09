@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
+  "module": "./src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "start": "cross-env NODE_ENV=production node dist/index.js"
+    "start": "NODE_ENV=production bun src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ai/openai-session": "workspace:*",
@@ -17,14 +18,12 @@
     "@openai-tools/gerrit": "workspace:*",
     "@openai-tools/git": "workspace:*",
     "@openai-tools/github": "workspace:*",
-    "dotenv": "^17.2.3",
-    "openai": "^6.9.1"
+    "openai": "catalog:"
   },
   "devDependencies": {
     "@configs/eslint": "workspace:*",
     "@configs/typescript": "workspace:*",
-    "@types/node": "^24.10.1",
-    "cross-env": "^7.0.3",
-    "typescript": "^5.9.3"
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
   }
 }

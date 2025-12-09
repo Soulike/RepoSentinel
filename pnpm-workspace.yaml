@@ -1,5 +1,0 @@
-packages:
-  - agents/*
-  - configs/*
-  - libraries/*
-  - tools/*

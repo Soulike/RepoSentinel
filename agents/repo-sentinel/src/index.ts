@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import {runAgent} from './agent.js';
 import {getCheckIntervalHours} from './helpers/env-helpers.js';
 import {logger} from '@helpers/logger';

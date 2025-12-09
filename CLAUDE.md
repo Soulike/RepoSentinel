@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-Pnpm monorepo for AI agents and supporting libraries. All packages use ESM and TypeScript.
+Bun monorepo for AI agents and supporting libraries. All packages use ESM and TypeScript.
 
 ### Workspace Structure
 
