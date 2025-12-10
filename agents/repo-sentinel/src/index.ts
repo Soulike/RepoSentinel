@@ -1,10 +1,10 @@
-import {runAgent} from './agent.js';
+import {runRepoSentinelAgent} from './agent.js';
 import {getCheckIntervalHours} from './helpers/env-helpers.js';
 import {logger} from '@helpers/logger';
 
 const runWithErrorHandling = async (): Promise<void> => {
   try {
-    await runAgent(logger);
+    await runRepoSentinelAgent(logger);
   } catch (error) {
     logger.error('Agent failed', error);
   }

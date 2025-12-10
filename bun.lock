@@ -21,6 +21,7 @@
       "name": "@agents/repo-sentinel",
       "version": "1.0.0",
       "dependencies": {
+        "@ai/agent": "workspace:*",
         "@ai/openai-session": "workspace:*",
         "@helpers/ado-auth": "workspace:*",
         "@helpers/github-auth": "workspace:*",
@@ -59,6 +60,20 @@
       "version": "1.0.0",
       "dependencies": {
         "@azure/identity": "^4.5.0",
+      },
+      "devDependencies": {
+        "@configs/eslint": "workspace:*",
+        "@configs/typescript": "workspace:*",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "libraries/agent": {
+      "name": "@ai/agent",
+      "version": "1.0.0",
+      "dependencies": {
+        "@ai/openai-session": "workspace:*",
+        "openai": "catalog:",
       },
       "devDependencies": {
         "@configs/eslint": "workspace:*",
@@ -187,6 +202,8 @@
   },
   "packages": {
     "@agents/repo-sentinel": ["@agents/repo-sentinel@workspace:agents/repo-sentinel"],
+
+    "@ai/agent": ["@ai/agent@workspace:libraries/agent"],
 
     "@ai/openai-session": ["@ai/openai-session@workspace:libraries/openai-session"],
 

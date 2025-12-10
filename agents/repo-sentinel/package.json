@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai/agent": "workspace:*",
     "@ai/openai-session": "workspace:*",
     "@helpers/ado-auth": "workspace:*",
     "@helpers/github-auth": "workspace:*",

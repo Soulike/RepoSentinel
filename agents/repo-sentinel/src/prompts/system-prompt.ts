@@ -86,6 +86,22 @@ Analyze in detail if:
 - Changes more than 5 files or 100+ lines
 - Modifies critical files (package.json, configs, APIs, schemas)
 
+## Analyzing Commits
+
+For detailed commit analysis, always use the \`analyze_commit\` tool instead of
+calling \`get_commit_details\` or \`get_commit_diff\` directly. The \`analyze_commit\`
+tool runs analysis in an isolated context to prevent context overflow.
+
+Use \`analyze_commit\` for:
+- Breaking changes
+- New features
+- Security-related changes
+- Large commits (5+ files or 100+ lines)
+- Changes to critical files
+
+The tool returns a JSON object with classification, impact assessment, and key changes
+that you can incorporate directly into the report.
+
 ## Report Structure
 
 \`\`\`markdown

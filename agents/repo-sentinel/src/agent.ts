@@ -1,5 +1,5 @@
-import {Session, ToolRegistry, createOpenAIClient} from '@ai/openai-session';
-import type {ToolResult} from '@ai/openai-session';
+import {ToolRegistry} from '@ai/openai-session';
+import {runAgent} from '@ai/agent';
 import type {Logger} from '@helpers/logger';
 import {authenticateWithDeviceFlow, validateToken} from '@helpers/github-auth';
 import {getAdoAccessToken} from '@helpers/ado-auth';
@@ -28,6 +28,12 @@ import {listReports} from './tools/list-reports.js';
 import {readReport} from './tools/read-report.js';
 import {saveReport} from './tools/save-report.js';
 
+// Import sub-agent tools
+import {analyzeGitCommit} from './subagent-tools/git-analyzer.js';
+import {analyzeGitHubCommit} from './subagent-tools/github-analyzer.js';
+import {analyzeAdoCommit} from './subagent-tools/ado-analyzer.js';
+import {analyzeGerritChange} from './subagent-tools/gerrit-analyzer.js';
+
 function createToolRegistry(provider: RepoProvider): ToolRegistry {
   const registry = new ToolRegistry();
 
@@ -37,23 +43,27 @@ function createToolRegistry(provider: RepoProvider): ToolRegistry {
   registry.register(readReport);
   registry.register(saveReport);
 
-  // Register provider-specific tools
+  // Register provider-specific tools + analyzer
   if (provider === 'github') {
+    registry.register(analyzeGitHubCommit);
     registry.register(getGitHubToken);
     registry.registerAll(githubTools);
   } else if (provider === 'gerrit') {
+    registry.register(analyzeGerritChange);
     registry.registerAll(gerritTools);
   } else if (provider === 'ado') {
+    registry.register(analyzeAdoCommit);
     registry.register(getAdoToken);
     registry.registerAll(adoTools);
   } else {
+    registry.register(analyzeGitCommit);
     registry.registerAll(gitTools);
   }
 
   return registry;
 }
 
-export async function runAgent(logger: Logger): Promise<void> {
+export async function runRepoSentinelAgent(logger: Logger): Promise<void> {
   const provider = getRepoProvider();
 
   // Authenticate with GitHub if using GitHub provider
@@ -83,76 +93,27 @@ export async function runAgent(logger: Logger): Promise<void> {
 
   const registry = createToolRegistry(provider);
 
-  const client = createOpenAIClient({
-    apiKey: getOpenAIApiKey(),
-    baseURL: getOpenAIBaseURL(),
-  });
-
-  const session = new Session({
-    client,
-    model: getOpenAIModel(),
-    systemPrompt: createSystemPrompt(provider, getCustomPrompt()),
-    tools: registry.getToolDefinitions(),
-  });
-
   logger.info(`Starting RepoSentinel agent with ${provider} provider...`);
 
-  let response = await session.chat(createUserPrompt());
+  // Use runAgent with logging callbacks
+  const result = await runAgent(
+    {
+      apiKey: getOpenAIApiKey(),
+      baseURL: getOpenAIBaseURL(),
+      model: getOpenAIModel(),
+      systemPrompt: createSystemPrompt(provider, getCustomPrompt()),
+      registry,
+      // Pass logger callbacks for visibility
+      onToolStart: (name, id, args) => logger.toolStart(name, id, args),
+      onToolEnd: (name, id, output) => logger.toolEnd(name, id, output),
+      onToolError: (name, id, error) => logger.toolError(name, id, error),
+      onContent: (content) => logger.assistant(content),
+    },
+    createUserPrompt(),
+  );
 
-  logger.debug('API Response', response);
-
-  // Helper to extract and print content from all choices
-  const printContent = () => {
-    for (const choice of response.choices) {
-      if (choice.message.content) {
-        logger.assistant(choice.message.content);
-      }
-    }
-  };
-
-  // Helper to collect all tool calls from all choices
-  const collectToolCalls = () => {
-    return response.choices.flatMap(
-      (choice) =>
-        choice.message.tool_calls?.filter((tc) => tc.type === 'function') ?? [],
-    );
-  };
-
-  // Output initial response content if any
-  printContent();
-
-  while (Session.requiresToolCall(response)) {
-    const toolCalls = collectToolCalls();
-
-    // Execute all tool calls in parallel
-    const results: ToolResult[] = await Promise.all(
-      toolCalls.map(async (toolCall) => {
-        const toolId = toolCall.id;
-        const toolName = toolCall.function.name;
-        const toolArgs = toolCall.function.arguments;
-
-        logger.toolStart(toolName, toolId, toolArgs);
-
-        try {
-          const output = await registry.execute(toolName, toolArgs);
-          logger.toolEnd(toolName, toolId, output);
-          return {tool_call_id: toolId, content: output};
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          logger.toolError(toolName, toolId, errorMessage);
-          return {
-            tool_call_id: toolId,
-            content: JSON.stringify({error: errorMessage}),
-          };
-        }
-      }),
-    );
-
-    response = await session.submitToolResults(results);
-    printContent();
+  // Log final content (may be duplicate if onContent already logged it)
+  if (result.content) {
+    logger.assistant(result.content);
   }
-
-  // Print any final content
-  printContent();
 }
