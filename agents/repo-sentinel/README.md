@@ -4,18 +4,17 @@ RepoSentinel is an AI agent that monitors Git repositories and generates detaile
 
 ## Setup
 
-1. Install dependencies:
+1. Install [Bun](https://bun.com/).
+2. Install dependencies:
 
 ```bash
 bun install
 ```
 
 2. Copy `.env.example` to `.env` and configure the environment variables.
-
-3. Build and run:
+3. Run:
 
 ```bash
-bun run build
 bun start
 ```
 
