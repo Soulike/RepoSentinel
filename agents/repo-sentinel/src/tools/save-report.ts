@@ -62,8 +62,14 @@ Returns: JSON object with:
     const reportDir = getReportDir();
     const filePath = join(reportDir, filename);
 
-    // Ensure directory exists
-    await mkdir(dirname(filePath), {recursive: true});
+    // Ensure directory exists (ignore EEXIST for Windows/Bun compatibility)
+    try {
+      await mkdir(dirname(filePath), {recursive: true});
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'EEXIST') {
+        throw err;
+      }
+    }
 
     try {
       // 'wx' flag: write exclusive - fails if file exists
